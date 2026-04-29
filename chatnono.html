@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>數織輔助小工具｜Nonogram Helper</title>
+<style>
+:root{
+  --brand:#1b7f6b;
+  --brand-dark:#126050;
+  --accent:#2b7dbf;
+  --bg:#f5f7f6;
+  --card:#ffffff;
+  --text:#1f2a2a;
+  --muted:#64706f;
+  --line:#d8e1df;
+  --danger:#b93838;
+  --warn:#b7791f;
+  --ok:#217a45;
+  --shadow:0 10px 26px rgba(20,40,36,.08);
+  --cell:30px;
+  --topHint:96px;
+  --leftHint:120px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;
+  background:linear-gradient(180deg,#eef7f4 0%,var(--bg) 260px);
+  color:var(--text);
+}
+header{
+  padding:26px 18px 14px;
+  text-align:center;
+}
+header h1{margin:0;font-size:30px;letter-spacing:.04em;color:var(--brand-dark)}
+header p{margin:8px 0 0;color:var(--muted)}
+.wrap{
+  width:min(1180px,calc(100% - 28px));
+  margin:0 auto 36px;
+}
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:16px;
+  margin:14px 0;
+}
+.controls{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:12px;
+  align-items:end;
+}
+.field{grid-column:span 2}
+.field.wide{grid-column:span 4}
+.field.full{grid-column:1/-1}
+label{display:block;font-weight:700;margin-bottom:6px;font-size:14px}
+input[type="number"],textarea,input[type="text"]{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 11px;
+  font:inherit;
+  background:#fff;
+}
+textarea{
+  min-height:96px;
+  resize:vertical;
+  line-height:1.5;
+}
+.help{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:6px;
+}
+.btns{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+button,.fileBtn{
+  appearance:none;
+  border:0;
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:800;
+  font-family:inherit;
+  cursor:pointer;
+  background:var(--brand);
+  color:white;
+  transition:.15s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  text-decoration:none;
+}
+button:hover,.fileBtn:hover{background:var(--brand-dark);transform:translateY(-1px)}
+button.secondary{background:#e8f1ef;color:var(--brand-dark)}
+button.secondary:hover{background:#d8e8e4}
+button.blue{background:var(--accent)}
+button.danger{background:var(--danger)}
+button.warn{background:var(--warn)}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.status{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.badge{
+  border:1px solid var(--line);
+  background:#fafdfc;
+  color:var(--muted);
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:13px;
+}
+.badge.ok{color:var(--ok);border-color:#bfe2cb;background:#f0fff5}
+.badge.warn{color:var(--warn);border-color:#f0d59c;background:#fffaf0}
+.badge.danger{color:var(--danger);border-color:#efbaba;background:#fff5f5}
+.tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.tab{
+  background:#edf4f2;
+  color:var(--brand-dark);
+}
+.tab.active{
+  background:var(--brand);
+  color:#fff;
+}
+.modeBar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.modeGroup{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.toolMode.active{
+  outline:3px solid rgba(27,127,107,.18);
+  background:var(--brand-dark);
+}
+.boardWrap{
+  overflow:auto;
+  max-height:72vh;
+  padding:10px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(45deg,#f7faf9 25%,transparent 25%),
+    linear-gradient(-45deg,#f7faf9 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#f7faf9 75%),
+    linear-gradient(-45deg,transparent 75%,#f7faf9 75%);
+  background-size:20px 20px;
+  background-position:0 0,0 10px,10px -10px,-10px 0px;
+}
+.nonogram{
+  display:grid;
+  grid-template-columns:var(--leftHint) repeat(var(--cols), var(--cell));
+  grid-template-rows:var(--topHint) repeat(var(--rows), var(--cell));
+  width:max-content;
+  background:#fff;
+  border:2px solid #778380;
+  user-select:none;
+}
+.corner{
+  grid-column:1;
+  grid-row:1;
+  background:#f0f5f3;
+  border-right:2px solid #778380;
+  border-bottom:2px solid #778380;
+  position:sticky;
+  left:0;
+  top:0;
+  z-index:8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+  padding:6px;
+}
+.colHint,.rowHint,.cell{
+  border-right:1px solid #cad4d1;
+  border-bottom:1px solid #cad4d1;
+}
+.colHint{
+  grid-row:1;
+  background:#f8fbfa;
+  border-bottom:2px solid #778380;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:4px 2px;
+  font-size:13px;
+  line-height:1.15;
+  text-align:center;
+  white-space:pre-line;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+.rowHint{
+  grid-column:1;
+  background:#f8fbfa;
+  border-right:2px solid #778380;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:2px 8px;
+  font-size:13px;
+  line-height:1.15;
+  text-align:right;
+  white-space:pre-wrap;
+  position:sticky;
+  left:0;
+  z-index:4;
+}
+.cell{
+  width:var(--cell);
+  height:var(--cell);
+  background:#fff;
+  position:relative;
+  cursor:pointer;
+}
+.cell:nth-child(5n){ }
+.cell.black{background:#1f2525}
+.cell.empty::before,.cell.empty::after{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  width:70%;
+  height:2px;
+  background:#8a9693;
+  transform-origin:center;
+}
+.cell.empty::before{transform:translate(-50%,-50%) rotate(45deg)}
+.cell.empty::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.cell.maybe{background:#fffbe8}
+.cell.maybe::after{
+  content:"?";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#b7791f;
+  font-weight:900;
+}
+.cell:hover{outline:2px solid rgba(43,125,191,.35);z-index:2}
+.cell.markedLine{box-shadow:inset 0 0 0 2px rgba(43,125,191,.45)}
+.colHint.conflict,.rowHint.conflict{background:#fff1f1;color:var(--danger);font-weight:900}
+.colHint.done,.rowHint.done{background:#f0fff5;color:var(--ok);font-weight:900}
+.smallGridLineR{border-right-color:#7f8b88!important}
+.smallGridLineB{border-bottom-color:#7f8b88!important}
+.output{
+  background:#10201d;
+  color:#e8fff8;
+  border-radius:14px;
+  padding:12px;
+  white-space:pre-wrap;
+  max-height:180px;
+  overflow:auto;
+  font-family:Consolas,monospace;
+  font-size:13px;
+}
+.hidden{display:none!important}
+@media (max-width:860px){
+  .controls{grid-template-columns:1fr 1fr}
+  .field,.field.wide{grid-column:span 1}
+  .field.full{grid-column:1/-1}
+  header h1{font-size:24px}
+  :root{--cell:26px;--topHint:88px;--leftHint:98px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>數織輔助小工具</h1>
+  <p>自訂長寬、無限題目、可拖曳作畫的 Nonogram / Picross 解題助手</p>
+</header>
+
+<main class="wrap">
+  <section class="panel">
+    <div class="controls">
+      <div class="field">
+        <label for="rows">高度／列數</label>
+        <input id="rows" type="number" min="1" max="80" value="15">
+      </div>
+      <div class="field">
+        <label for="cols">寬度／欄數</label>
+        <input id="cols" type="number" min="1" max="80" value="15">
+      </div>
+      <div class="field">
+        <label for="cellSize">格子大小</label>
+        <input id="cellSize" type="number" min="16" max="48" value="30">
+      </div>
+      <div class="field wide">
+        <label for="title">題目名稱</label>
+        <input id="title" type="text" placeholder="例如：雜誌第 12 頁第 3 題">
+      </div>
+      <div class="field wide">
+        <div class="btns">
+          <button id="buildBtn">生成新棋盤</button>
+          <button class="secondary" id="sampleBtn">放入範例</button>
+          <button class="danger" id="clearBoardBtn">清空作答</button>
+        </div>
+      </div>
+
+      <div class="field full">
+        <div class="tabs">
+          <button class="tab active" data-tab="input">輸入題目提示</button>
+          <button class="tab" data-tab="save">儲存／載入</button>
+          <button class="tab" data-tab="help">使用說明</button>
+        </div>
+
+        <div id="tab-input">
+          <div class="controls">
+            <div class="field wide">
+              <label for="rowClues">左側列提示</label>
+              <textarea id="rowClues" placeholder="每一列一行，例如：
+3
+1 1
+5
+2 2"></textarea>
+              <div class="help">列提示需等於高度。每行可用空白、逗號、頓號分隔；空白列可輸入 0。</div>
+            </div>
+            <div class="field wide">
+              <label for="colClues">上方欄提示</label>
+              <textarea id="colClues" placeholder="每一欄一行，例如：
+2
+1 1
+4
+0"></textarea>
+              <div class="help">欄提示需等於寬度。手機上建議先用記事本打好再貼上。</div>
+            </div>
+            <div class="field wide">
+              <label>快速操作</label>
+              <div class="btns">
+                <button class="blue" id="applyCluesBtn">套用提示</button>
+                <button class="secondary" id="fitHintBtn">自動調整提示區</button>
+                <button class="secondary" id="copyBlankBtn">產生空白輸入格式</button>
+              </div>
+              <div class="status" id="status"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-save" class="hidden">
+          <div class="controls">
+            <div class="field wide">
+              <label>儲存目前題目</label>
+              <div class="btns">
+                <button id="exportBtn">匯出 JSON</button>
+                <button class="secondary" id="copyStateBtn">複製題目資料</button>
+              </div>
+              <div class="help">會儲存長寬、提示數字、目前作答狀態。適合換電腦或下次繼續。</div>
+            </div>
+            <div class="field wide">
+              <label for="importFile">載入 JSON</label>
+              <input id="importFile" type="file" accept=".json,application/json">
+              <div class="help">選擇之前匯出的 JSON 檔即可還原。</div>
+            </div>
+            <div class="field wide">
+              <label for="jsonBox">題目資料文字</label>
+              <textarea id="jsonBox" placeholder="也可以把 JSON 貼在這裡，再按「從文字載入」"></textarea>
+              <div class="btns" style="margin-top:8px">
+                <button class="blue" id="importTextBtn">從文字載入</button>
+              </div>
+            </div>
+          </div>
+          <div id="exportOutput" class="output hidden"></div>
+        </div>
+
+        <div id="tab-help" class="hidden">
+          <div class="help" style="font-size:15px;line-height:1.8">
+            <b>格子操作：</b>左鍵點擊會依序切換「塗黑 → 打叉 → 問號 → 空白」。<br>
+            <b>拖曳作畫：</b>先選下方工具模式，再按住滑鼠拖過格子即可連續畫。手機也可用觸控拖曳。<br>
+            <b>檢查功能：</b>目前會檢查每列/每欄的連續黑格數是否已符合提示；符合會變綠，不符合但黑格數超過或分段不可能時會變紅。<br>
+            <b>注意：</b>這是「輔助解題工具」，不是完全自動解答器；可以幫你避免畫錯、保存題目、快速重玩。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="modeBar">
+      <div class="modeGroup">
+        <button class="toolMode" data-mode="cycle">點擊循環</button>
+        <button class="toolMode" data-mode="black">塗黑</button>
+        <button class="toolMode" data-mode="empty" class="toolMode active">打叉</button>
+        <button class="toolMode" data-mode="maybe">問號</button>
+        <button class="toolMode" data-mode="clear">橡皮擦</button>
+      </div>
+      <div class="btns">
+        <button class="secondary" id="checkBtn">檢查目前狀態</button>
+        <button class="secondary" id="fillObviousBtn">填入重疊必黑格</button>
+      </div>
+    </div>
+    <div class="boardWrap" id="boardWrap">
+      <div id="board" class="nonogram"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let rows=15, cols=15, grid=[], rowClues=[], colClues=[], mode='empty';
+let dragging=false, dragValue=null;
+
+function parseClues(text, expected){
+  const lines = text.replace(/\r/g,'').split('\n');
+  const out = lines.map(line=>{
+    const t=line.trim();
+    if(!t || t==='0') return [];
+    return t.split(/[,\s，、]+/).filter(Boolean).map(Number).filter(n=>Number.isFinite(n)&&n>0);
+  });
+  while(out.length<expected) out.push([]);
+  return out.slice(0, expected);
+}
+function cluesToText(clues){
+  return clues.map(a=>a.length?a.join(' '):'0').join('\n');
+}
+function initGrid(r,c){
+  grid = Array.from({length:r},()=>Array.from({length:c},()=>0));
+}
+function setCSS(){
+  document.documentElement.style.setProperty('--rows', rows);
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--cell', Math.max(16, Math.min(48, +$('cellSize').value||30))+'px');
+}
+function buildBoard(){
+  rows = Math.max(1, Math.min(80, +$('rows').value||15));
+  cols = Math.max(1, Math.min(80, +$('cols').value||15));
+  $('rows').value=rows; $('cols').value=cols;
+  setCSS();
+  initGrid(rows,cols);
+  rowClues = parseClues($('rowClues').value, rows);
+  colClues = parseClues($('colClues').value, cols);
+  render();
+  fitHintArea();
+  updateStatus();
+}
+function render(){
+  const board=$('board');
+  board.innerHTML='';
+  board.style.setProperty('--rows', rows);
+  board.style.setProperty('--cols', cols);
+
+  const corner=document.createElement('div');
+  corner.className='corner';
+  corner.textContent='欄提示 ↑\n列提示 ←';
+  board.appendChild(corner);
+
+  for(let c=0;c<cols;c++){
+    const d=document.createElement('div');
+    d.className='colHint';
+    d.dataset.col=c;
+    d.style.gridColumn=c+2;
+    d.textContent=(colClues[c]||[]).join('\n') || '0';
+    board.appendChild(d);
+  }
+  for(let r=0;r<rows;r++){
+    const d=document.createElement('div');
+    d.className='rowHint';
+    d.dataset.row=r;
+    d.style.gridRow=r+2;
+    d.textContent=(rowClues[r]||[]).join(' ') || '0';
+    board.appendChild(d);
+  }
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cell=document.createElement('div');
+      cell.className='cell';
+      if((c+1)%5===0) cell.classList.add('smallGridLineR');
+      if((r+1)%5===0) cell.classList.add('smallGridLineB');
+      cell.dataset.r=r; cell.dataset.c=c;
+      cell.style.gridColumn=c+2;
+      cell.style.gridRow=r+2;
+      applyCellClass(cell, grid[r][c]);
+      cell.addEventListener('pointerdown', onPointerDown);
+      cell.addEventListener('pointerenter', onPointerEnter);
+      board.appendChild(cell);
+    }
+  }
+  document.addEventListener('pointerup',()=>{dragging=false;dragValue=null;});
+  checkState(false);
+}
+function applyCellClass(el,val){
+  el.classList.remove('black','empty','maybe');
+  if(val===1) el.classList.add('black');
+  if(val===2) el.classList.add('empty');
+  if(val===3) el.classList.add('maybe');
+}
+function nextValue(v){ return (v+1)%4; }
+function valueByMode(current){
+  if(mode==='cycle') return nextValue(current);
+  if(mode==='black') return 1;
+  if(mode==='empty') return 2;
+  if(mode==='maybe') return 3;
+  if(mode==='clear') return 0;
+  return current;
+}
+function paintCell(el,val=null){
+  const r=+el.dataset.r, c=+el.dataset.c;
+  const newVal = val===null ? valueByMode(grid[r][c]) : val;
+  grid[r][c]=newVal;
+  applyCellClass(el,newVal);
+}
+function onPointerDown(e){
+  e.preventDefault();
+  dragging=true;
+  const r=+this.dataset.r, c=+this.dataset.c;
+  dragValue=valueByMode(grid[r][c]);
+  paintCell(this, dragValue);
+}
+function onPointerEnter(e){
+  if(!dragging || dragValue===null) return;
+  paintCell(this, dragValue);
+}
+function getRuns(arr){
+  const runs=[]; let n=0;
+  for(const v of arr){
+    if(v===1) n++;
+    else{ if(n) runs.push(n); n=0; }
+  }
+  if(n) runs.push(n);
+  return runs;
+}
+function equalArr(a,b){return a.length===b.length && a.every((x,i)=>x===b[i]);}
+function possibleLine(states, clues){
+  const len=states.length;
+  const target=clues.reduce((s,n)=>s+n,0);
+  const black=states.filter(v=>v===1).length;
+  if(black>target) return false;
+  const runs=getRuns(states);
+  for(let i=0;i<runs.length;i++){
+    if(i>=clues.length || runs[i]>clues[i]) return false;
+  }
+  return true;
+}
+function checkState(showAlert=true){
+  let doneRows=0, doneCols=0, conflict=0;
+  document.querySelectorAll('.rowHint,.colHint').forEach(el=>el.classList.remove('done','conflict'));
+
+  for(let r=0;r<rows;r++){
+    const states=grid[r];
+    const runs=getRuns(states);
+    const hint=document.querySelector(`.rowHint[data-row="${r}"]`);
+    if(equalArr(runs,rowClues[r]||[])){hint.classList.add('done'); doneRows++;}
+    else if(!possibleLine(states,rowClues[r]||[])){hint.classList.add('conflict'); conflict++;}
+  }
+  for(let c=0;c<cols;c++){
+    const states=grid.map(row=>row[c]);
+    const runs=getRuns(states);
+    const hint=document.querySelector(`.colHint[data-col="${c}"]`);
+    if(equalArr(runs,colClues[c]||[])){hint.classList.add('done'); doneCols++;}
+    else if(!possibleLine(states,colClues[c]||[])){hint.classList.add('conflict'); conflict++;}
+  }
+  updateStatus(doneRows,doneCols,conflict);
+  if(showAlert) alert(conflict ? `目前有 ${conflict} 個列/欄可能衝突。` : '目前沒有偵測到明顯衝突。');
+}
+function updateStatus(doneRows=0,doneCols=0,conflict=0){
+  const rowLines = $('rowClues').value.replace(/\r/g,'').split('\n').filter((_,i)=>i<rows).length;
+  const colLines = $('colClues').value.replace(/\r/g,'').split('\n').filter((_,i)=>i<cols).length;
+  $('status').innerHTML = `
+    <span class="badge">棋盤：${rows} × ${cols}</span>
+    <span class="badge ${rowClues.length===rows?'ok':'warn'}">列提示：${rowClues.length}/${rows}</span>
+    <span class="badge ${colClues.length===cols?'ok':'warn'}">欄提示：${colClues.length}/${cols}</span>
+    <span class="badge ok">完成列：${doneRows}/${rows}</span>
+    <span class="badge ok">完成欄：${doneCols}/${cols}</span>
+    <span class="badge ${conflict?'danger':'ok'}">衝突：${conflict}</span>`;
+}
+function fitHintArea(){
+  const maxRowNums=Math.max(1,...rowClues.map(a=>a.length));
+  const maxColNums=Math.max(1,...colClues.map(a=>a.length));
+  document.documentElement.style.setProperty('--leftHint', Math.max(92, maxRowNums*28+32)+'px');
+  document.documentElement.style.setProperty('--topHint', Math.max(76, maxColNums*20+24)+'px');
+}
+function generateBlankFormat(){
+  rows = +$('rows').value||15; cols=+$('cols').value||15;
+  $('rowClues').value = Array.from({length:rows},()=> '0').join('\n');
+  $('colClues').value = Array.from({length:cols},()=> '0').join('\n');
+}
+function lineOverlap(length, clues){
+  if(!clues || !clues.length) return Array(length).fill(0);
+  const total = clues.reduce((s,n)=>s+n,0) + clues.length - 1;
+  if(total>length) return Array(length).fill(0);
+  const earliest=[]; let pos=0;
+  for(const n of clues){ earliest.push([pos,pos+n-1]); pos += n+1; }
+  const latest=[]; pos=length-1;
+  for(let i=clues.length-1;i>=0;i--){ const n=clues[i]; latest[i]=[pos-n+1,pos]; pos -= n+1; }
+  const must=Array(length).fill(0);
+  for(let i=0;i<clues.length;i++){
+    const s=Math.max(earliest[i][0], latest[i][0]);
+    const e=Math.min(earliest[i][1], latest[i][1]);
+    for(let p=s;p<=e;p++) if(p>=0&&p<length) must[p]=1;
+  }
+  return must;
+}
+function fillObvious(){
+  for(let r=0;r<rows;r++){
+    const must=lineOverlap(cols,rowClues[r]||[]);
+    for(let c=0;c<cols;c++) if(must[c]) grid[r][c]=1;
+  }
+  for(let c=0;c<cols;c++){
+    const must=lineOverlap(rows,colClues[c]||[]);
+    for(let r=0;r<rows;r++) if(must[r]) grid[r][c]=1;
+  }
+  render();
+  checkState(false);
+}
+function getState(){
+  return {version:1,title:$('title').value||'',rows,cols,rowClues,colClues,grid,cellSize:+$('cellSize').value||30,savedAt:new Date().toISOString()};
+}
+function loadState(obj){
+  rows=obj.rows; cols=obj.cols;
+  $('rows').value=rows; $('cols').value=cols;
+  $('title').value=obj.title||'';
+  $('cellSize').value=obj.cellSize||30;
+  rowClues=obj.rowClues||Array.from({length:rows},()=>[]);
+  colClues=obj.colClues||Array.from({length:cols},()=>[]);
+  grid=obj.grid||Array.from({length:rows},()=>Array.from({length:cols},()=>0));
+  $('rowClues').value=cluesToText(rowClues);
+  $('colClues').value=cluesToText(colClues);
+  setCSS(); fitHintArea(); render(); checkState(false);
+}
+function downloadJSON(){
+  const data=JSON.stringify(getState(),null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  const name=($('title').value||'nonogram').replace(/[\\/:*?"<>|]/g,'_');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${name}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function setSample(){
+  $('rows').value=10; $('cols').value=10; $('title').value='範例：小愛心';
+  $('rowClues').value=['2 2','4 4','10','10','8','6','4','2','1 1','0'].join('\n');
+  $('colClues').value=['0','2','4','6','8','8','6','4','2','0'].join('\n');
+  buildBoard();
+}
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['input','save','help'].forEach(t=>$('tab-'+t).classList.add('hidden'));
+    $('tab-'+btn.dataset.tab).classList.remove('hidden');
+  });
+});
+document.querySelectorAll('.toolMode').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.toolMode').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.dataset.mode;
+  });
+});
+$('buildBtn').addEventListener('click',buildBoard);
+$('applyCluesBtn').addEventListener('click',()=>{rowClues=parseClues($('rowClues').value, rows); colClues=parseClues($('colClues').value, cols); fitHintArea(); render();});
+$('fitHintBtn').addEventListener('click',fitHintArea);
+$('copyBlankBtn').addEventListener('click',generateBlankFormat);
+$('clearBoardBtn').addEventListener('click',()=>{initGrid(rows,cols); render();});
+$('checkBtn').addEventListener('click',()=>checkState(true));
+$('fillObviousBtn').addEventListener('click',fillObvious);
+$('sampleBtn').addEventListener('click',setSample);
+$('exportBtn').addEventListener('click',downloadJSON);
+$('copyStateBtn').addEventListener('click',async()=>{
+  const data=JSON.stringify(getState(),null,2);
+  $('jsonBox').value=data;
+  try{await navigator.clipboard.writeText(data); alert('已複製題目資料。');}
+  catch(e){alert('已放到文字框，瀏覽器不允許自動複製時可手動複製。');}
+});
+$('importFile').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const text=await file.text();
+  loadState(JSON.parse(text));
+});
+$('importTextBtn').addEventListener('click',()=>{
+  try{loadState(JSON.parse($('jsonBox').value));}
+  catch(e){alert('JSON 內容讀取失敗，請確認格式。');}
+});
+$('cellSize').addEventListener('change',()=>{setCSS(); render();});
+buildBoard();
+</script>
+</body>
+</html>
