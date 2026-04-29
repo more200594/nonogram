@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數織終極遊玩助手 (長寬自訂版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 20px; user-select: none; }
+        
+        .setup-controls { background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border-left: 5px solid #8b5cf6; }
+        .setup-controls label { font-weight: bold; color: #333; }
+        .setup-controls input[type="number"] { width: 60px; padding: 5px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+
+        .controls, .tools { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+        button { padding: 8px 16px; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; transition: filter 0.2s; font-weight: bold;}
+        button:hover { filter: brightness(0.9); }
+        
+        .tool-radio { display: none; }
+        .tool-label { padding: 8px 16px; background-color: #e2e8f0; border: 2px solid transparent; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold; color: #333; transition: all 0.2s; }
+        .tool-radio:checked + .tool-label { background-color: #dbeafe; border-color: #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.4); }
+
+        .guess-mode-toggle { padding: 8px 16px; background-color: #f9fafb; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; font-weight: bold; color: #333; transition: all 0.2s; white-space: nowrap; }
+        .guess-mode-toggle.active { background-color: #fffbeb; border-color: #f59e0b; color: #b45309; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+
+        .game-area { display: flex; flex-direction: column; overflow-x: auto; max-width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        .formula-bar-container { display: flex; align-items: center; margin-bottom: 15px; padding: 10px 15px; background-color: #e2e8f0; border-radius: 6px; box-sizing: border-box; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .formula-bar-container label { font-weight: bold; margin-right: 10px; color: #333; white-space: nowrap; }
+        .formula-bar-container input { flex-grow: 1; padding: 8px 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+
+        .row-container { display: flex; }
+        
+        .clue-header { cursor: pointer; background-color: transparent; transition: background-color 0.2s, border 0.2s; border: 1px dashed transparent; border-radius: 4px; }
+        .clue-header:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .clue-header.active { background-color: #dbeafe; border: 1px solid #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+
+        .top-clues-wrapper { display: flex; margin-left: 100px; margin-bottom: 5px; }
+        .top-clue { width: 30px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 5px; min-height: 60px; gap: 2px; }
+        .top-clue span { font-size: 13px; line-height: 1.2; font-weight: bold; color: #333; }
+
+        .left-clues-wrapper { display: flex; flex-direction: column; width: 100px; margin-right: 5px; }
+        .left-clue { height: 30px; display: flex; justify-content: flex-end; align-items: center; padding-right: 8px; gap: 6px; }
+        .left-clue span { font-size: 13px; font-weight: bold; color: #333; }
+
+        .grid { display: grid; gap: 1px; background-color: #999; border: 2px solid #333; touch-action: none; }
+        .cell { width: 30px; height: 30px; background-color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: crosshair; }
+        
+        .filled { background-color: #333; } 
+        .crossed { color: #d32f2f; background-color: white; } 
+        .guess-filled { background-color: #888888; } 
+        .guess-crossed { color: #f57c00; background-color: white; } 
+        
+        .hide-for-snapshot { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h2>🤖 數織終極遊玩助手</h2>
+    
+    <div class="setup-controls">
+        <label for="grid-width">寬度 (直行):</label>
+        <input type="number" id="grid-width" value="10" min="1" max="50">
+        
+        <label for="grid-height">高度 (橫列):</label>
+        <input type="number" id="grid-height" value="10" min="1" max="50">
+        
+        <button onclick="applyNewSize()" style="background-color: #8b5cf6;">✨ 建立新畫布</button>
+    </div>
+
+    <div class="tools">
+        <input type="radio" name="tool" id="tool-fill" value="1" class="tool-radio" checked>
+        <label for="tool-fill" class="tool-label">⬛ 塗黑</label>
+
+        <input type="radio" name="tool" id="tool-cross" value="-1" class="tool-radio">
+        <label for="tool-cross" class="tool-label">❌ 打叉</label>
+
+        <input type="radio" name="tool" id="tool-clear" value="0" class="tool-radio">
+        <label for="tool-clear" class="tool-label">🧽 橡皮擦</label>
+
+        <button type="button" id="guess-mode-btn" class="guess-mode-toggle" onclick="toggleGuessMode()">🤔 假設模式</button>
+    </div>
+
+    <div class="controls">
+        <button onclick="checkGameState()" style="background-color: #10b981;">🔍 檢查對錯</button>
+        <button onclick="showAnswer()" style="background-color: #f59e0b;">💡 顯示解答</button>
+        <button onclick="resetGrid()" style="background-color:#6c757d;">🗑️ 清空網格</button>
+        
+        <div style="width: 2px; height: 25px; background: #ccc; margin: 0 5px;"></div>
+        
+        <button onclick="saveGame()" style="background-color: #0ea5e9;">💾 儲存進度</button>
+        <button onclick="loadGame()" style="background-color: #0284c7;">📂 讀取進度</button>
+        <button onclick="takeSnapshot()" style="background-color: #ec4899;">📸 下載圖片</button>
+    </div>
+
+    <div class="game-area" id="capture-area">
+        <div class="formula-bar-container" id="formula-bar">
+            <label id="formula-label">選擇提示區</label>
+            <input type="text" id="formula-input" placeholder="請點選網格邊緣的提示區，可按 Tab 快速切換..." disabled>
+        </div>
+
+        <div class="top-clues-wrapper" id="top-clues"></div>
+        <div class="row-container">
+            <div class="left-clues-wrapper" id="left-clues"></div>
+            <div class="grid" id="grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // 將原本的常數改為動態變數
+        let ROWS = 10; // 高度 (橫列)
+        let COLS = 10; // 寬度 (直行)
+        
+        const gridElement = document.getElementById('grid');
+        const topCluesElement = document.getElementById('top-clues');
+        const leftCluesElement = document.getElementById('left-clues');
+        const formulaInput = document.getElementById('formula-input');
+        const formulaLabel = document.getElementById('formula-label');
+        const guessModeBtn = document.getElementById('guess-mode-btn');
+        const formulaBar = document.getElementById('formula-bar');
+        
+        const STATE_EMPTY = 0, STATE_FILLED = 1, STATE_CROSSED = -1, STATE_GUESS_FILLED = 2, STATE_GUESS_CROSSED = -2; 
+
+        let boardState, topCluesData, leftCluesData;
+        let currentEdit = null; 
+        let currentTool = STATE_FILLED; 
+        let isDrawing = false; 
+        let isGuessMode = false; 
+
+        // 綁定畫筆切換與全域滑鼠放開
+        document.querySelectorAll('.tool-radio').forEach(radio => {
+            radio.addEventListener('change', (e) => { currentTool = parseInt(e.target.value); });
+        });
+        document.addEventListener('mouseup', () => isDrawing = false);
+
+        function toggleGuessMode() {
+            isGuessMode = !isGuessMode;
+            if (isGuessMode) guessModeBtn.classList.add('active');
+            else guessModeBtn.classList.remove('active');
+        }
+
+        // 初始化資料結構與畫面
+        function initializeGame() {
+            topCluesData = Array(COLS).fill("");
+            leftCluesData = Array(ROWS).fill("");
+            boardState = Array(ROWS).fill(null).map(() => Array(COLS).fill(STATE_EMPTY));
+            
+            // 清空 DOM 元素準備重繪
+            gridElement.innerHTML = '';
+            topCluesElement.innerHTML = '';
+            leftCluesElement.innerHTML = '';
+            
+            // 重置輸入框
+            currentEdit = null;
+            formulaInput.disabled = true;
+            formulaInput.value = '';
+            formulaLabel.textContent = '選擇提示區';
+
+            buildUI();
+        }
+
+        // 建立 DOM 元素
+        function buildUI() {
+            gridElement.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
+            
+            // 建立上方提示 (對應 COLS 寬度)
+            for(let j=0; j<COLS; j++) {
+                let topDiv = document.createElement('div');
+                topDiv.className = 'top-clue clue-header';
+                topDiv.id = `top-${j}`;
+                topDiv.addEventListener('click', () => setActiveClue('top', j));
+                topCluesElement.appendChild(topDiv);
+            }
+
+            // 建立左方提示與網格本身 (對應 ROWS 高度)
+            for(let i=0; i<ROWS; i++) {
+                let leftDiv = document.createElement('div');
+                leftDiv.className = 'left-clue clue-header';
+                leftDiv.id = `left-${i}`;
+                leftDiv.addEventListener('click', () => setActiveClue('left', i));
+                leftCluesElement.appendChild(leftDiv);
+
+                for(let j=0; j<COLS; j++) {
+                    let cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${i}-${j}`;
+                    
+                    const getTargetState = () => {
+                        if (currentTool === STATE_EMPTY) return STATE_EMPTY;
+                        if (isGuessMode) return currentTool === STATE_FILLED ? STATE_GUESS_FILLED : STATE_GUESS_CROSSED;
+                        return currentTool;
+                    };
+
+                    cell.addEventListener('mousedown', (e) => {
+                        if(e.button === 2) { 
+                            currentTool = STATE_CROSSED; document.getElementById('tool-cross').checked = true;
+                        } else if (e.button === 0 && document.getElementById('tool-cross').checked && currentTool !== STATE_CROSSED) {
+                            currentTool = STATE_CROSSED;
+                        }
+                        isDrawing = true;
+                        boardState[i][j] = getTargetState();
+                        updateGridUI();
+                    });
+
+                    cell.addEventListener('mouseenter', () => {
+                        if (isDrawing) { boardState[i][j] = getTargetState(); updateGridUI(); }
+                    });
+
+                    cell.addEventListener('contextmenu', e => e.preventDefault());
+                    gridElement.appendChild(cell);
+                }
+            }
+            renderClues(); // 確保讀檔或重建時有顯示數字
+        }
+
+        // 套用新尺寸 (使用者點擊建立新畫布)
+        function applyNewSize() {
+            let newW = parseInt(document.getElementById('grid-width').value);
+            let newH = parseInt(document.getElementById('grid-height').value);
+            
+            if (isNaN(newW) || isNaN(newH) || newW < 1 || newH < 1) {
+                return alert("寬高必須是有效的正整數喔！");
+            }
+            if (newW > 35 || newH > 35) {
+                if(!confirm("網格設定很大，雖然程式跑得動，但畫面可能會變得非常小或是需要一直捲動，確定要繼續嗎？")) return;
+            }
+
+            if(confirm("建立新畫布會清空目前所有進度與題目，確定嗎？")) {
+                COLS = newW;
+                ROWS = newH;
+                initializeGame();
+            }
+        }
+
+        // 資料編輯列同步邏輯
+        formulaInput.addEventListener('input', (e) => {
+            if (!currentEdit) return;
+            let val = e.target.value;
+            if (currentEdit.type === 'top') topCluesData[currentEdit.index] = val;
+            else leftCluesData[currentEdit.index] = val;
+            renderClues();
+        });
+
+        // 動態支援長寬不一的 Tab 切換
+        formulaInput.addEventListener('keydown', (e) => {
+            if (!currentEdit) return;
+            if (e.key === 'Tab' || e.key === 'Enter') {
+                e.preventDefault(); 
+                let nextType = currentEdit.type;
+                let nextIndex = currentEdit.index;
+                
+                if (e.shiftKey && e.key === 'Tab') { 
+                    if (currentEdit.type === 'left') { 
+                        nextIndex--; 
+                        if (nextIndex < 0) { nextType = 'top'; nextIndex = COLS - 1; } 
+                    } else { 
+                        nextIndex--; 
+                        if (nextIndex < 0) { nextType = 'left'; nextIndex = ROWS - 1; } 
+                    }
+                } else { 
+                    if (currentEdit.type === 'top') { 
+                        nextIndex++; 
+                        if (nextIndex >= COLS) { nextType = 'left'; nextIndex = 0; } 
+                    } else { 
+                        nextIndex++; 
+                        if (nextIndex >= ROWS) { nextType = 'top'; nextIndex = 0; } 
+                    }
+                }
+                setActiveClue(nextType, nextIndex);
+            }
+        });
+
+        function setActiveClue(type, index) {
+            document.querySelectorAll('.clue-header').forEach(el => el.classList.remove('active'));
+            currentEdit = { type, index };
+            document.getElementById(`${type}-${index}`).classList.add('active');
+            formulaInput.disabled = false;
+            formulaLabel.textContent = (type === 'top' ? `第 ${index + 1} 直行 :` : `第 ${index + 1} 橫列 :`);
+            formulaInput.value = type === 'top' ? topCluesData[index] : leftCluesData[index];
+            formulaInput.focus();
+            setTimeout(() => formulaInput.select(), 0);
+        }
+
+        function renderClues() {
+            for(let j=0; j<COLS; j++) {
+                let topVals = topCluesData[j].split(',').filter(v => v.trim() !== '');
+                document.getElementById(`top-${j}`).innerHTML = topVals.map(v => `<span>${v}</span>`).join('');
+            }
+            for(let i=0; i<ROWS; i++) {
+                let leftVals = leftCluesData[i].split(',').filter(v => v.trim() !== '');
+                document.getElementById(`left-${i}`).innerHTML = leftVals.map(v => `<span>${v}</span>`).join('');
+            }
+        }
+
+        function resetGrid() {
+            if(confirm("確定要清空網格上的所有畫筆嗎？（提示數字不會被清除）")){
+                boardState = Array(ROWS).fill(null).map(() => Array(COLS).fill(STATE_EMPTY));
+                updateGridUI();
+            }
+        }
+
+        function getParsedClues(type) {
+            let dataArr = type === 'top' ? topCluesData : leftCluesData;
+            return dataArr.map(val => val ? val.split(',').filter(v => v.trim() !== '').map(Number) : []);
+        }
+
+        function updateGridUI() {
+            for (let i = 0; i < ROWS; i++) {
+                for (let j = 0; j < COLS; j++) {
+                    let cell = document.getElementById(`cell-${i}-${j}`);
+                    cell.className = 'cell';
+                    cell.innerHTML = '';
+                    switch (boardState[i][j]) {
+                        case STATE_FILLED: cell.classList.add('filled'); break;
+                        case STATE_CROSSED: cell.classList.add('crossed'); cell.innerHTML = 'X'; break;
+                        case STATE_GUESS_FILLED: cell.classList.add('guess-filled'); break;
+                        case STATE_GUESS_CROSSED: cell.classList.add('guess-crossed'); cell.innerHTML = 'X'; break;
+                    }
+                }
+            }
+        }
+
+        // --- 存檔讀檔 (加入動態長寬支援) ---
+        function saveGame() {
+            const saveData = { rows: ROWS, cols: COLS, board: boardState, topClues: topCluesData, leftClues: leftCluesData };
+            localStorage.setItem('nonogram_save', JSON.stringify(saveData));
+            alert('💾 進度已經安全儲存！');
+        }
+
+        function loadGame() {
+            const savedData = localStorage.getItem('nonogram_save');
+            if (!savedData) return alert('找不到之前的存檔記錄喔！');
+            try {
+                const data = JSON.parse(savedData);
+                // 讀檔時自動更新長寬並重繪介面
+                ROWS = data.rows;
+                COLS = data.cols;
+                document.getElementById('grid-height').value = ROWS;
+                document.getElementById('grid-width').value = COLS;
+                
+                boardState = data.board;
+                topCluesData = data.topClues;
+                leftCluesData = data.leftClues;
+                
+                buildUI();
+                updateGridUI();
+                alert('📂 讀取成功！歡迎回來繼續挑戰。');
+            } catch (e) {
+                alert('讀檔失敗，存檔資料可能已經損毀。');
+            }
+        }
+
+        // 截圖下載
+        function takeSnapshot() {
+            const captureArea = document.getElementById('capture-area');
+            formulaBar.classList.add('hide-for-snapshot');
+            document.querySelectorAll('.clue-header').forEach(el => el.classList.remove('active'));
+            currentEdit = null; formulaInput.disabled = true; formulaInput.value = ''; formulaLabel.textContent = '選擇提示區';
+
+            html2canvas(captureArea, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+                let link = document.createElement('a');
+                link.download = `數織完成圖_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                formulaBar.classList.remove('hide-for-snapshot');
+            }).catch(err => {
+                alert("截圖發生錯誤！");
+                formulaBar.classList.remove('hide-for-snapshot');
+            });
+        }
+
+        // --- 核心演算法 (支援長寬不同) ---
+        function getPermutations(length, clues) {
+            if (clues.length === 0) return [Array(length).fill(STATE_CROSSED)];
+            let perms = [];
+            let firstClue = clues[0];
+            let restClues = clues.slice(1);
+            let minSpaceForRest = restClues.reduce((a, b) => a + b + 1, 0);
+            let maxStart = length - firstClue - (restClues.length > 0 ? minSpaceForRest : 0);
+            for (let i = 0; i <= maxStart; i++) {
+                let p = Array(length).fill(STATE_CROSSED);
+                for (let j = 0; j < firstClue; j++) p[i + j] = STATE_FILLED; 
+                if (restClues.length === 0) perms.push(p);
+                else {
+                    p[i + firstClue] = STATE_CROSSED; 
+                    let subPerms = getPermutations(length - i - firstClue - 1, restClues);
+                    for (let sub of subPerms) {
+                        let combined = [...p];
+                        for(let k=0; k<sub.length; k++) combined[i + firstClue + 1 + k] = sub[k];
+                        perms.push(combined);
+                    }
+                }
+            }
+            return perms;
+        }
+
+        function getBlocksFromLine(line) {
+            let blocks = []; let count = 0;
+            for (let i=0; i<line.length; i++) {
+                if (line[i] === STATE_FILLED || line[i] === STATE_GUESS_FILLED) count++;
+                else if (count > 0) { blocks.push(count); count = 0; }
+            }
+            if (count > 0) blocks.push(count);
+            return blocks;
+        }
+
+        function checkGameState() {
+            let topClues = getParsedClues('top');
+            let leftClues = getParsedClues('left');
+            let isPerfect = true;
+            
+            // 檢查橫列
+            for(let i=0; i<ROWS; i++) if (getBlocksFromLine(boardState[i]).join(',') !== leftClues[i].join(',')) { isPerfect = false; break; }
+            // 檢查直行
+            if (isPerfect) for(let j=0; j<COLS; j++) { let colState = boardState.map(row => row[j]); if (getBlocksFromLine(colState).join(',') !== topClues[j].join(',')) { isPerfect = false; break; } }
+            if (isPerfect) { alert("🎉 太神啦！網格完全符合提示，你通關了！"); return; }
+
+            let hasError = false;
+            for (let i = 0; i < ROWS; i++) {
+                let perms = getPermutations(COLS, leftClues[i]); // 橫列的排列長度是 COLS
+                let validPerms = perms.filter(p => p.every((val, idx) => {
+                    let curState = boardState[i][idx];
+                    if (curState === STATE_EMPTY) return true;
+                    return ((curState === STATE_FILLED || curState === STATE_GUESS_FILLED) ? STATE_FILLED : STATE_CROSSED) === val;
+                }));
+                if (validPerms.length === 0) { hasError = true; break; }
+            }
+            if (!hasError) {
+                for (let j = 0; j < COLS; j++) {
+                    let perms = getPermutations(ROWS, topClues[j]); // 直行的排列長度是 ROWS
+                    let colState = boardState.map(row => row[j]);
+                    let validPerms = perms.filter(p => p.every((val, idx) => {
+                        let curState = colState[idx];
+                        if (curState === STATE_EMPTY) return true;
+                        return ((curState === STATE_FILLED || curState === STATE_GUESS_FILLED) ? STATE_FILLED : STATE_CROSSED) === val;
+                    }));
+                    if (validPerms.length === 0) { hasError = true; break; }
+                }
+            }
+            if (hasError) alert("❌ 哎呀！有些地方產生矛盾了，你可能有填錯喔！");
+            else alert("✅ 目前為止的邏輯都是對的，沒有衝突！繼續保持！");
+        }
+
+        function showAnswer() {
+            if (!confirm("💡 確定要偷看答案嗎？這會覆蓋掉你目前的進度喔！")) return;
+            for (let i = 0; i < ROWS; i++) for (let j = 0; j < COLS; j++) boardState[i][j] = STATE_EMPTY;
+            let topClues = getParsedClues('top'); let leftClues = getParsedClues('left');
+            let changed = true; let iterations = 0;
+            
+            while (changed && iterations < 20) {
+                changed = false; iterations++;
+                for (let i = 0; i < ROWS; i++) {
+                    let perms = getPermutations(COLS, leftClues[i]);
+                    let validPerms = perms.filter(p => p.every((val, idx) => boardState[i][idx] === STATE_EMPTY || boardState[i][idx] === val));
+                    if(validPerms.length > 0) {
+                        for (let j = 0; j < COLS; j++) {
+                            if (boardState[i][j] === STATE_EMPTY) {
+                                if (validPerms.every(p => p[j] === STATE_FILLED)) { boardState[i][j] = STATE_FILLED; changed = true; }
+                                else if (validPerms.every(p => p[j] === STATE_CROSSED)) { boardState[i][j] = STATE_CROSSED; changed = true; }
+                            }
+                        }
+                    }
+                }
+                for (let j = 0; j < COLS; j++) {
+                    let perms = getPermutations(ROWS, topClues[j]);
+                    let colState = boardState.map(row => row[j]);
+                    let validPerms = perms.filter(p => p.every((val, idx) => colState[idx] === STATE_EMPTY || colState[idx] === val));
+                    if(validPerms.length > 0) {
+                        for (let i = 0; i < ROWS; i++) {
+                            if (boardState[i][j] === STATE_EMPTY) {
+                                if (validPerms.every(p => p[i] === STATE_FILLED)) { boardState[i][j] = STATE_FILLED; changed = true; }
+                                else if (validPerms.every(p => p[i] === STATE_CROSSED)) { boardState[i][j] = STATE_CROSSED; changed = true; }
+                            }
+                        }
+                    }
+                }
+            }
+            updateGridUI();
+            if (iterations === 20) alert("這題太難啦！需要用到進階的假設推理。我幫你把能 100% 確定的格子都填上了！");
+        }
+
+        // 啟動遊戲
+        initializeGame();
+    </script>
+</body>
+</html>
