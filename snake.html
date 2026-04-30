@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nokia 風格貪食蛇</title>
+  <style>
+    :root {
+      --body: #1f2b24;
+      --phone: #2f3b35;
+      --phone-dark: #18211d;
+      --screen: #9bad7b;
+      --screen-dark: #7f915f;
+      --pixel: #26311f;
+      --pixel-soft: rgba(38, 49, 31, .18);
+      --key: #d9ddd2;
+      --key-text: #24312d;
+      --shadow: 0 24px 70px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 12px;
+      font-family: "Microsoft JhengHei", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(155,173,123,.16), transparent 30rem),
+        linear-gradient(135deg, #151d19, var(--body));
+      color: #eef4e9;
+    }
+
+    .wrap {
+      width: min(100%, 430px);
+      text-align: center;
+    }
+
+    .title {
+      margin: 0 0 18px;
+      letter-spacing: .14em;
+      font-size: clamp(1.7rem, 6vw, 2.6rem);
+      text-shadow: 0 3px 0 rgba(0,0,0,.25);
+    }
+
+    .phone {
+      background: linear-gradient(145deg, #435149, var(--phone));
+      border: 4px solid #596a60;
+      border-radius: 42px 42px 58px 58px;
+      padding: 24px 18px 28px;
+      box-shadow: var(--shadow), inset 0 0 0 2px rgba(255,255,255,.08);
+      position: relative;
+    }
+
+    .speaker {
+      width: 96px;
+      height: 10px;
+      margin: 0 auto 18px;
+      border-radius: 999px;
+      background: #111814;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.1);
+    }
+
+    .screen-shell {
+      background: #151d19;
+      border-radius: 24px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,.06);
+    }
+
+    .screen {
+      background:
+        linear-gradient(rgba(38,49,31,.06) 50%, transparent 50%),
+        var(--screen);
+      background-size: 100% 4px;
+      border: 4px solid #677650;
+      border-radius: 14px;
+      padding: 10px;
+      color: var(--pixel);
+      box-shadow: inset 0 0 22px rgba(38,49,31,.25);
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "Courier New", monospace;
+      font-weight: 900;
+      font-size: 14px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: var(--screen-dark);
+      border: 3px solid var(--pixel);
+      image-rendering: pixelated;
+    }
+
+    .message {
+      min-height: 24px;
+      margin: 8px 0 0;
+      font-family: "Courier New", monospace;
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--pixel);
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    .key {
+      height: 48px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(#f2f4ee, var(--key));
+      color: var(--key-text);
+      font-size: 1.15rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #a7afa1, 0 10px 18px rgba(0,0,0,.24);
+    }
+
+    .key:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #a7afa1, 0 5px 10px rgba(0,0,0,.22);
+    }
+
+    .key.empty {
+      visibility: hidden;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .action {
+      border: 1px solid rgba(238,244,233,.28);
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,.08);
+      color: #eef4e9;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .help {
+      margin: 16px auto 0;
+      color: rgba(238,244,233,.76);
+      line-height: 1.8;
+      font-size: .92rem;
+    }
+
+    @media (max-width: 420px) {
+      .phone { padding-inline: 12px; }
+      .keys { grid-template-columns: repeat(3, 64px); }
+      .key { height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1 class="title">SNAKE 3310</h1>
+
+    <section class="phone" aria-label="Nokia 風格貪食蛇遊戲">
+      <div class="speaker"></div>
+
+      <div class="screen-shell">
+        <div class="screen">
+          <div class="hud">
+            <span>SCORE <b id="score">0</b></span>
+            <span>BEST <b id="best">0</b></span>
+          </div>
+          <canvas id="game" width="360" height="360" aria-label="貪食蛇遊戲畫面"></canvas>
+          <p id="message" class="message">PRESS START</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="action" id="startBtn" type="button">Start / Restart</button>
+        <button class="action" id="pauseBtn" type="button">Pause</button>
+      </div>
+
+      <div class="keys" aria-label="手機方向鍵">
+        <button class="key empty" tabindex="-1"></button>
+        <button class="key" data-dir="up" type="button">▲</button>
+        <button class="key empty" tabindex="-1"></button>
+        <button class="key" data-dir="left" type="button">◀</button>
+        <button class="key" data-dir="down" type="button">▼</button>
+        <button class="key" data-dir="right" type="button">▶</button>
+      </div>
+    </section>
+
+    <p class="help">電腦：方向鍵 / WASD 操作，空白鍵暫停。手機：用畫面上的方向鍵。</p>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const bestEl = document.getElementById('best');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const keyBtns = document.querySelectorAll('[data-dir]');
+
+    const grid = 18;
+    const tile = canvas.width / grid;
+    const tickMs = 115;
+
+    let snake;
+    let food;
+    let direction;
+    let nextDirection;
+    let score;
+    let best = Number(localStorage.getItem('nokiaSnakeBest') || 0);
+    let loopId = null;
+    let running = false;
+    let paused = false;
+
+    bestEl.textContent = best;
+    resetGame(false);
+    draw();
+
+    function resetGame(shouldStart = true) {
+      snake = [
+        { x: 8, y: 9 },
+        { x: 7, y: 9 },
+        { x: 6, y: 9 }
+      ];
+      direction = { x: 1, y: 0 };
+      nextDirection = { x: 1, y: 0 };
+      score = 0;
+      paused = false;
+      scoreEl.textContent = score;
+      placeFood();
+      messageEl.textContent = shouldStart ? 'GO!' : 'PRESS START';
+      draw();
+
+      if (shouldStart) startLoop();
+    }
+
+    function startLoop() {
+      clearInterval(loopId);
+      running = true;
+      loopId = setInterval(step, tickMs);
+    }
+
+    function stopLoop() {
+      clearInterval(loopId);
+      loopId = null;
+      running = false;
+    }
+
+    function togglePause() {
+      if (!running) return;
+      paused = !paused;
+      messageEl.textContent = paused ? 'PAUSED' : 'GO!';
+      draw();
+    }
+
+    function step() {
+      if (paused) return;
+
+      direction = nextDirection;
+      const head = snake[0];
+      const nextHead = {
+        x: head.x + direction.x,
+        y: head.y + direction.y
+      };
+
+      if (hitWall(nextHead) || hitSelf(nextHead)) {
+        gameOver();
+        return;
+      }
+
+      snake.unshift(nextHead);
+
+      if (nextHead.x === food.x && nextHead.y === food.y) {
+        score += 10;
+        scoreEl.textContent = score;
+        if (score > best) {
+          best = score;
+          bestEl.textContent = best;
+          localStorage.setItem('nokiaSnakeBest', String(best));
+        }
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function gameOver() {
+      stopLoop();
+      messageEl.textContent = 'GAME OVER';
+      draw(true);
+    }
+
+    function hitWall(pos) {
+      return pos.x < 0 || pos.x >= grid || pos.y < 0 || pos.y >= grid;
+    }
+
+    function hitSelf(pos) {
+      return snake.some(part => part.x === pos.x && part.y === pos.y);
+    }
+
+    function placeFood() {
+      do {
+        food = {
+          x: Math.floor(Math.random() * grid),
+          y: Math.floor(Math.random() * grid)
+        };
+      } while (snake.some(part => part.x === food.x && part.y === food.y));
+    }
+
+    function setDirection(name) {
+      const map = {
+        up: { x: 0, y: -1 },
+        down: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 }
+      };
+      const selected = map[name];
+      if (!selected) return;
+
+      const isReverse = selected.x + direction.x === 0 && selected.y + direction.y === 0;
+      if (isReverse) return;
+
+      nextDirection = selected;
+      if (!running) {
+        messageEl.textContent = 'PRESS START';
+      }
+    }
+
+    function draw(isGameOver = false) {
+      ctx.fillStyle = '#7f915f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawGrid();
+      drawFood();
+      drawSnake(isGameOver);
+    }
+
+    function drawGrid() {
+      ctx.fillStyle = 'rgba(38, 49, 31, .12)';
+      for (let i = 0; i <= grid; i++) {
+        ctx.fillRect(i * tile, 0, 1, canvas.height);
+        ctx.fillRect(0, i * tile, canvas.width, 1);
+      }
+    }
+
+    function drawSnake(isGameOver) {
+      snake.forEach((part, index) => {
+        ctx.fillStyle = isGameOver && index === 0 ? '#4b221f' : '#26311f';
+        ctx.fillRect(part.x * tile + 3, part.y * tile + 3, tile - 6, tile - 6);
+
+        if (index === 0) {
+          ctx.fillStyle = '#9bad7b';
+          const eyeSize = 3;
+          const baseX = part.x * tile;
+          const baseY = part.y * tile;
+          ctx.fillRect(baseX + 7, baseY + 7, eyeSize, eyeSize);
+          ctx.fillRect(baseX + tile - 10, baseY + 7, eyeSize, eyeSize);
+        }
+      });
+    }
+
+    function drawFood() {
+      ctx.fillStyle = '#26311f';
+      ctx.beginPath();
+      ctx.arc(food.x * tile + tile / 2, food.y * tile + tile / 2, tile * .28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    startBtn.addEventListener('click', () => resetGame(true));
+    pauseBtn.addEventListener('click', togglePause);
+
+    keyBtns.forEach(btn => {
+      btn.addEventListener('click', () => setDirection(btn.dataset.dir));
+    });
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      const keyMap = {
+        arrowup: 'up',
+        w: 'up',
+        arrowdown: 'down',
+        s: 'down',
+        arrowleft: 'left',
+        a: 'left',
+        arrowright: 'right',
+        d: 'right'
+      };
+
+      if (key === ' ') {
+        event.preventDefault();
+        togglePause();
+        return;
+      }
+
+      if (keyMap[key]) {
+        event.preventDefault();
+        setDirection(keyMap[key]);
+      }
+    });
+  </script>
+</body>
+</html>
