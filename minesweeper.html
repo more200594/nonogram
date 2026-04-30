@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>踩地雷 Minesweeper</title>
+  <style>
+    :root {
+      --bg: #f4f7f5;
+      --panel: #ffffff;
+      --text: #24312d;
+      --muted: #66756f;
+      --brand: #1b7f6b;
+      --brand-dark: #126250;
+      --danger: #d94b4b;
+      --warning: #f0a83a;
+      --cell: #dfe8e4;
+      --cell-open: #f8fbfa;
+      --border: #bfd0c9;
+      --shadow: 0 14px 40px rgba(27, 127, 107, 0.14);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(27, 127, 107, .16), transparent 34rem),
+        linear-gradient(135deg, #f4f7f5 0%, #eef5f2 100%);
+      display: flex;
+      justify-content: center;
+      padding: 28px 14px;
+    }
+
+    .app {
+      width: min(100%, 980px);
+    }
+
+    .hero {
+      background: rgba(255, 255, 255, .86);
+      border: 1px solid rgba(191, 208, 201, .7);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 24px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      letter-spacing: .04em;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    select,
+    button {
+      font: inherit;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+    }
+
+    select {
+      background: #fff;
+      color: var(--text);
+      min-width: 140px;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+      transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+      box-shadow: 0 8px 18px rgba(27, 127, 107, .18);
+    }
+
+    button:hover {
+      background: var(--brand-dark);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--brand-dark);
+      box-shadow: none;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(90px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .stat {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: .85rem;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      font-size: 1.35rem;
+    }
+
+    .board-wrap {
+      background: var(--panel);
+      border: 1px solid rgba(191, 208, 201, .9);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .message {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .message.win {
+      color: var(--brand-dark);
+      font-weight: 700;
+    }
+
+    .message.lose {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .board {
+      display: grid;
+      gap: 4px;
+      width: max-content;
+      max-width: 100%;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      display: grid;
+      place-items: center;
+      border: 1px solid #b8c9c2;
+      border-radius: 9px;
+      background: linear-gradient(145deg, #edf4f1, var(--cell));
+      color: var(--text);
+      font-weight: 800;
+      font-size: calc(var(--cell-size) * .45);
+      cursor: pointer;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .06);
+    }
+
+    .cell:hover:not(.open) {
+      filter: brightness(1.03);
+      outline: 2px solid rgba(27, 127, 107, .22);
+    }
+
+    .cell.open {
+      background: var(--cell-open);
+      border-color: #d9e6e1;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .cell.mine {
+      background: #ffe8e8;
+    }
+
+    .cell.flagged {
+      background: #fff6df;
+    }
+
+    .n1 { color: #2b7dbf; }
+    .n2 { color: #1b7f6b; }
+    .n3 { color: #d94b4b; }
+    .n4 { color: #7357c8; }
+    .n5 { color: #b75b2b; }
+    .n6 { color: #15939b; }
+    .n7 { color: #333; }
+    .n8 { color: #777; }
+
+    .hint {
+      margin: 14px 2px 0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px 10px;
+      }
+
+      .hero,
+      .board-wrap {
+        border-radius: 22px;
+        padding: 16px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .stat {
+        padding: 10px;
+      }
+
+      .stat strong {
+        font-size: 1.05rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>踩地雷</h1>
+          <p class="subtitle">左鍵翻格、右鍵插旗。手機可先按「插旗模式」再點格子。</p>
+        </div>
+      </div>
+
+      <div class="controls" aria-label="遊戲控制區">
+        <label>
+          <span class="sr-only">難度</span>
+          <select id="difficulty" aria-label="選擇難度">
+            <option value="easy">初級：9 × 9，10 雷</option>
+            <option value="normal" selected>中級：16 × 16，40 雷</option>
+            <option value="hard">高級：30 × 16，99 雷</option>
+          </select>
+        </label>
+        <button id="newGameBtn" type="button">重新開始</button>
+        <button id="flagModeBtn" class="secondary" type="button" aria-pressed="false">插旗模式：關</button>
+      </div>
+
+      <div class="stats" aria-label="遊戲狀態">
+        <div class="stat"><span>剩餘地雷</span><strong id="mineLeft">40</strong></div>
+        <div class="stat"><span>時間</span><strong id="timer">0</strong></div>
+        <div class="stat"><span>狀態</span><strong id="status">準備</strong></div>
+      </div>
+    </section>
+
+    <section class="board-wrap">
+      <p id="message" class="message">第一下不會踩到雷，放心踩下去。</p>
+      <div id="board" class="board" aria-label="踩地雷遊戲盤"></div>
+      <p class="hint">小提醒：右鍵可以插旗；已開啟的數字格若周圍旗子數等於數字，再點一次可快速展開周圍格子。</p>
+    </section>
+  </main>
+
+  <script>
+    const difficultyMap = {
+      easy: { rows: 9, cols: 9, mines: 10, size: 40 },
+      normal: { rows: 16, cols: 16, mines: 40, size: 34 },
+      hard: { rows: 16, cols: 30, mines: 99, size: 30 }
+    };
+
+    const boardEl = document.getElementById('board');
+    const difficultyEl = document.getElementById('difficulty');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const flagModeBtn = document.getElementById('flagModeBtn');
+    const mineLeftEl = document.getElementById('mineLeft');
+    const timerEl = document.getElementById('timer');
+    const statusEl = document.getElementById('status');
+    const messageEl = document.getElementById('message');
+
+    let config;
+    let cells;
+    let firstClick;
+    let gameOver;
+    let openedCount;
+    let flaggedCount;
+    let flagMode = false;
+    let timer = 0;
+    let timerId = null;
+
+    function createEmptyCells() {
+      return Array.from({ length: config.rows }, (_, row) =>
+        Array.from({ length: config.cols }, (_, col) => ({
+          row,
+          col,
+          mine: false,
+          open: false,
+          flagged: false,
+          adjacent: 0
+        }))
+      );
+    }
+
+    function startGame() {
+      config = difficultyMap[difficultyEl.value];
+      cells = createEmptyCells();
+      firstClick = true;
+      gameOver = false;
+      openedCount = 0;
+      flaggedCount = 0;
+      timer = 0;
+      clearInterval(timerId);
+      timerId = null;
+
+      mineLeftEl.textContent = config.mines;
+      timerEl.textContent = '0';
+      statusEl.textContent = '準備';
+      messageEl.textContent = '第一下不會踩到雷，放心踩下去。';
+      messageEl.className = 'message';
+
+      renderBoard();
+    }
+
+    function renderBoard() {
+      const responsiveSize = Math.max(24, Math.min(config.size, Math.floor((window.innerWidth - 48) / config.cols)));
+      boardEl.style.gridTemplateColumns = `repeat(${config.cols}, var(--cell-size))`;
+      boardEl.style.setProperty('--cell-size', `${responsiveSize}px`);
+      boardEl.innerHTML = '';
+
+      for (let row = 0; row < config.rows; row++) {
+        for (let col = 0; col < config.cols; col++) {
+          const cell = cells[row][col];
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = getCellClass(cell);
+          btn.dataset.row = row;
+          btn.dataset.col = col;
+          btn.setAttribute('aria-label', getAriaLabel(cell));
+          btn.textContent = getCellText(cell);
+          btn.addEventListener('click', handleCellClick);
+          btn.addEventListener('contextmenu', handleRightClick);
+          boardEl.appendChild(btn);
+        }
+      }
+    }
+
+    function getCellClass(cell) {
+      const classes = ['cell'];
+      if (cell.open) classes.push('open');
+      if (cell.flagged) classes.push('flagged');
+      if (cell.open && cell.mine) classes.push('mine');
+      if (cell.open && cell.adjacent) classes.push(`n${cell.adjacent}`);
+      return classes.join(' ');
+    }
+
+    function getCellText(cell) {
+      if (cell.flagged && !cell.open) return '🚩';
+      if (!cell.open) return '';
+      if (cell.mine) return '💣';
+      return cell.adjacent ? String(cell.adjacent) : '';
+    }
+
+    function getAriaLabel(cell) {
+      if (cell.flagged && !cell.open) return '已插旗的格子';
+      if (!cell.open) return '未開啟的格子';
+      if (cell.mine) return '地雷';
+      return cell.adjacent ? `周圍有 ${cell.adjacent} 個地雷` : '空白格';
+    }
+
+    function handleCellClick(event) {
+      const cell = getCellFromEvent(event);
+      if (gameOver) return;
+
+      if (flagMode) {
+        toggleFlag(cell);
+        return;
+      }
+
+      if (cell.open && cell.adjacent > 0) {
+        chordOpen(cell);
+        return;
+      }
+
+      openCell(cell);
+    }
+
+    function handleRightClick(event) {
+      event.preventDefault();
+      if (gameOver) return;
+      toggleFlag(getCellFromEvent(event));
+    }
+
+    function getCellFromEvent(event) {
+      const row = Number(event.currentTarget.dataset.row);
+      const col = Number(event.currentTarget.dataset.col);
+      return cells[row][col];
+    }
+
+    function startTimer() {
+      if (timerId) return;
+      timerId = setInterval(() => {
+        timer += 1;
+        timerEl.textContent = timer;
+      }, 1000);
+    }
+
+    function placeMines(safeRow, safeCol) {
+      const safeZone = new Set();
+      forEachNeighbor(safeRow, safeCol, (cell) => safeZone.add(`${cell.row},${cell.col}`));
+      safeZone.add(`${safeRow},${safeCol}`);
+
+      let placed = 0;
+      while (placed < config.mines) {
+        const row = Math.floor(Math.random() * config.rows);
+        const col = Math.floor(Math.random() * config.cols);
+        const cell = cells[row][col];
+        if (cell.mine || safeZone.has(`${row},${col}`)) continue;
+        cell.mine = true;
+        placed += 1;
+      }
+
+      calculateAdjacents();
+    }
+
+    function calculateAdjacents() {
+      for (const row of cells) {
+        for (const cell of row) {
+          if (cell.mine) continue;
+          let count = 0;
+          forEachNeighbor(cell.row, cell.col, (near) => {
+            if (near.mine) count += 1;
+          });
+          cell.adjacent = count;
+        }
+      }
+    }
+
+    function forEachNeighbor(row, col, callback) {
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nextRow = row + dr;
+          const nextCol = col + dc;
+          if (nextRow < 0 || nextRow >= config.rows || nextCol < 0 || nextCol >= config.cols) continue;
+          callback(cells[nextRow][nextCol]);
+        }
+      }
+    }
+
+    function openCell(cell) {
+      if (cell.open || cell.flagged || gameOver) return;
+
+      if (firstClick) {
+        placeMines(cell.row, cell.col);
+        firstClick = false;
+        statusEl.textContent = '遊戲中';
+        messageEl.textContent = '加油，地雷正在暗處看著你。';
+        startTimer();
+      }
+
+      cell.open = true;
+      openedCount += 1;
+
+      if (cell.mine) {
+        loseGame();
+        return;
+      }
+
+      if (cell.adjacent === 0) {
+        forEachNeighbor(cell.row, cell.col, openCell);
+      }
+
+      checkWin();
+      renderBoard();
+    }
+
+    function chordOpen(cell) {
+      const neighbors = [];
+      let flags = 0;
+      forEachNeighbor(cell.row, cell.col, (near) => {
+        neighbors.push(near);
+        if (near.flagged) flags += 1;
+      });
+
+      if (flags !== cell.adjacent) return;
+      neighbors.forEach((near) => {
+        if (!near.flagged && !near.open) openCell(near);
+      });
+    }
+
+    function toggleFlag(cell) {
+      if (cell.open || gameOver) return;
+      cell.flagged = !cell.flagged;
+      flaggedCount += cell.flagged ? 1 : -1;
+      mineLeftEl.textContent = config.mines - flaggedCount;
+      renderBoard();
+    }
+
+    function revealAllMines() {
+      for (const row of cells) {
+        for (const cell of row) {
+          if (cell.mine) cell.open = true;
+        }
+      }
+    }
+
+    function loseGame() {
+      gameOver = true;
+      clearInterval(timerId);
+      revealAllMines();
+      statusEl.textContent = '失敗';
+      messageEl.textContent = 'BOOM！你踩到雷了，再來一局。';
+      messageEl.className = 'message lose';
+      renderBoard();
+    }
+
+    function checkWin() {
+      const safeCells = config.rows * config.cols - config.mines;
+      if (openedCount !== safeCells) return;
+
+      gameOver = true;
+      clearInterval(timerId);
+      statusEl.textContent = '勝利';
+      messageEl.textContent = `恭喜破關！完成時間：${timer} 秒。`;
+      messageEl.className = 'message win';
+
+      for (const row of cells) {
+        for (const cell of row) {
+          if (cell.mine) cell.flagged = true;
+        }
+      }
+      flaggedCount = config.mines;
+      mineLeftEl.textContent = '0';
+    }
+
+    newGameBtn.addEventListener('click', startGame);
+    difficultyEl.addEventListener('change', startGame);
+    flagModeBtn.addEventListener('click', () => {
+      flagMode = !flagMode;
+      flagModeBtn.textContent = `插旗模式：${flagMode ? '開' : '關'}`;
+      flagModeBtn.setAttribute('aria-pressed', String(flagMode));
+    });
+
+    window.addEventListener('resize', renderBoard);
+    startGame();
+  </script>
+</body>
+</html>
