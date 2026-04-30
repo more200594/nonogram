@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Factory Simulator MVP</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>工廠模擬器 MVP</h1>
+      <p>可設定格數、入口出口與基礎移動模擬</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls">
+        <h2>地圖設定</h2>
+        <div class="row">
+          <label for="gridWidth">寬</label>
+          <input id="gridWidth" type="number" min="5" max="80" value="20" />
+          <label for="gridHeight">高</label>
+          <input id="gridHeight" type="number" min="5" max="80" value="12" />
+          <button id="resizeGridBtn">重建地圖</button>
+        </div>
+        <div class="row">
+          <label for="layerCount">樓層數</label>
+          <input id="layerCount" type="number" min="1" max="12" value="3" />
+          <button id="applyLayerCountBtn">套用樓層</button>
+        </div>
+        <div class="row">
+          <label for="showBaseLayerRef">顯示第1層參考</label>
+          <input id="showBaseLayerRef" type="checkbox" checked />
+        </div>
+        <div id="layerTabs" class="layer-tabs"></div>
+
+        <h2>編輯工具</h2>
+        <div class="row tool-row">
+          <button class="tool-btn active" data-tool="empty">空地</button>
+          <button class="tool-btn" data-tool="belt_right">輸送帶 →</button>
+          <button class="tool-btn" data-tool="belt_down">輸送帶 ↓</button>
+          <button class="tool-btn" data-tool="belt_left">輸送帶 ←</button>
+          <button class="tool-btn" data-tool="belt_up">輸送帶 ↑</button>
+          <button class="tool-btn" data-tool="lift_up">上樓轉運</button>
+          <button class="tool-btn" data-tool="lift_down">下樓轉運</button>
+          <button class="tool-btn" data-tool="wall">障礙物</button>
+          <button class="tool-btn" data-tool="entrance">入口</button>
+          <button class="tool-btn" data-tool="exit">出口</button>
+          <button class="tool-btn" data-tool="eyedropper">吸管</button>
+          <button class="tool-btn" data-tool="erase">清除</button>
+        </div>
+        <p class="hint" id="toolDescription">空地：把格子清成空白可通行區。</p>
+
+        <h2>顏色設定</h2>
+        <div class="row color-row">
+          <label for="colorBelt">輸送帶</label>
+          <input id="colorBelt" type="color" value="#4b5f7f" />
+          <label for="colorEntrance">入口</label>
+          <input id="colorEntrance" type="color" value="#28c76f" />
+          <label for="colorExit">出口</label>
+          <input id="colorExit" type="color" value="#ff6b6b" />
+          <label for="colorWall">障礙</label>
+          <input id="colorWall" type="color" value="#5a3a3a" />
+          <label for="colorEntity">物件</label>
+          <input id="colorEntity" type="color" value="#ffd166" />
+        </div>
+
+        <h2>新增自訂工具</h2>
+        <div class="row custom-tool-row">
+          <label for="customToolName">名稱</label>
+          <input id="customToolName" type="text" placeholder="例如：切割機" />
+          <label for="customToolSymbol">符號</label>
+          <input id="customToolSymbol" type="text" maxlength="2" value="⚙" />
+          <label for="customToolColor">顏色</label>
+          <input id="customToolColor" type="color" value="#8f7bff" />
+        </div>
+        <div class="row custom-tool-row">
+          <label for="customToolBehavior">行為</label>
+          <select id="customToolBehavior">
+            <option value="pass">可通過（裝飾/標記）</option>
+            <option value="block">阻擋（牆）</option>
+            <option value="process">加工站（停留）</option>
+          </select>
+          <label for="customToolParam">參數</label>
+          <input id="customToolParam" type="number" min="0" max="999" value="2" />
+          <label for="customToolDesc">說明</label>
+          <input id="customToolDesc" type="text" placeholder="例如：切割原料，後續再補功能邏輯" />
+          <button id="addCustomToolBtn">新增工具到工具列</button>
+        </div>
+        <p class="hint">自訂工具先作為可放置機台格，後續可逐步補上專屬行為邏輯。</p>
+        <div id="customToolList" class="custom-tool-list"></div>
+
+        <h2>模擬控制</h2>
+        <div class="row">
+          <button id="startBtn">開始</button>
+          <button id="pauseBtn">暫停</button>
+          <button id="resetBtn">重置</button>
+        </div>
+        <div class="row">
+          <label for="speedRange">速度</label>
+          <input id="speedRange" type="range" min="1" max="10" value="4" />
+          <span id="speedValue">4</span>
+          <span>tick/秒</span>
+        </div>
+      </section>
+
+      <section class="panel canvas-panel">
+        <canvas id="gridCanvas" width="800" height="480"></canvas>
+      </section>
+
+      <section class="panel status">
+        <h2>狀態資訊</h2>
+        <ul>
+          <li>模式：<span id="modeText">編輯</span></li>
+          <li>當前樓層：<span id="currentLayerText">1</span> / <span id="totalLayerText">1</span></li>
+          <li>入口數：<span id="entranceCount">0</span></li>
+          <li>出口數：<span id="exitCount">0</span></li>
+          <li>障礙數：<span id="wallCount">0</span></li>
+          <li>入口排隊：<span id="queueCount">0</span></li>
+          <li>卡住物件：<span id="blockedCount">0</span></li>
+          <li>生成數：<span id="spawnCount">0</span></li>
+          <li>到達數：<span id="arriveCount">0</span></li>
+          <li>目前物件：<span id="entityCount">0</span></li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="./src/main.js"></script>
+  </body>
+</html>
