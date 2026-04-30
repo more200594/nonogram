@@ -305,12 +305,12 @@
     // 主要工具：這裡可以手動改名稱、說明、分類、圖示與顏色。
     const apps = [
       {
-        name: "數織小工具(ChatGPT版)",
+        name: "數織小工具",
         description: "自訂長寬、協助標記與整理數織題目的小工具。",
         url: "chatnono.html",
         icon: "🧩",
-        type: "Game",
-        category: "遊戲",
+        type: "Puzzle",
+        category: "工具",
         accent: "#7c3aed",
         accent2: "#a78bfa"
       },
@@ -482,6 +482,32 @@
     renderFilters();
     renderApps();
     loadAutoApps();
-  </script>
+  // 🔥 點未分類卡片 → 產生可貼設定
+    document.addEventListener("click", (e) => {
+      const card = e.target.closest(".card");
+      if (!card) return;
+
+      const name = card.querySelector("h2")?.innerText || "";
+      const url = card.getAttribute("href") || "";
+      const tag = card.querySelector(".tag")?.innerText || "";
+
+      if (tag !== "未分類") return; // 只針對未分類
+
+      const template = `{
+  name: "${name}",
+  description: "請補上說明",
+  url: "${url.replace(/\/$/,"")}",
+  icon: "✨",
+  type: "Tool",
+  category: "工具",
+  accent: "#2563eb",
+  accent2: "#14b8a6"
+}`;
+
+      navigator.clipboard.writeText(template);
+      alert("已複製設定模板，貼到 apps 裡即可使用！");
+    });
+
+</script>
 </body>
 </html>
