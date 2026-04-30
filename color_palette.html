@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>配色器（含 Neutral + Text + AA 對比檢查 / 即時預覽）</title>
+  <style>
+    :root{
+      /* ===== Base inputs ===== */
+      --primary: #0f766e;
+      --accent:  #2563eb;
+      --neutral: #64748b; /* 中性色基底（偏藍灰） */
+      --text-base:#0f172a; /* 文字基底 */
+
+      /* ===== Text tokens (JS 會覆寫) ===== */
+      --text-strong:  #020617;
+      --text-default: #0f172a;
+      --text-muted:   #475569;
+      --text-inverse: #ffffff;
+
+      /* ===== Neutral scale (JS 會覆寫) ===== */
+      --neutral-0:   #ffffff;
+      --neutral-50:  #f8fafc;
+      --neutral-100: #f1f5f9;
+      --neutral-200: #e2e8f0;
+      --neutral-300: #cbd5e1;
+      --neutral-400: #94a3b8;
+      --neutral-500: #64748b;
+      --neutral-600: #475569;
+      --neutral-700: #334155;
+      --neutral-800: #1f2937;
+      --neutral-900: #0f172a;
+      --neutral-950: #020617;
+
+      /* ===== Primary scale (JS 會覆寫) ===== */
+      --primary-50:#f0fdfa; --primary-100:#ccfbf1; --primary-200:#99f6e4; --primary-300:#5eead4; --primary-400:#2dd4bf;
+      --primary-500:#14b8a6; --primary-600:#0d9488; --primary-700:#0f766e; --primary-800:#115e59; --primary-900:#134e4a;
+
+      /* ===== Accent scale (JS 會覆寫) ===== */
+      --accent-50:#eff6ff; --accent-100:#dbeafe; --accent-200:#bfdbfe; --accent-300:#93c5fd; --accent-400:#60a5fa;
+      --accent-500:#3b82f6; --accent-600:#2563eb; --accent-700:#1d4ed8; --accent-800:#1e40af; --accent-900:#1e3a8a;
+
+      /* ===== Semantic tokens ===== */
+      --color-text:         var(--text-default);
+      --color-text-muted:   var(--text-muted);
+      --color-text-inverse: var(--text-inverse);
+
+      --surface-page:   var(--neutral-50);
+      --surface-panel:  var(--neutral-0);
+      --surface-soft:   var(--neutral-100);
+
+      /* fallback border/focus (JS 會覆寫為實際 rgba) */
+      --border-default: rgba(15, 23, 42, .12);
+      --border-strong:  rgba(15, 23, 42, .18);
+      --focus-ring:     rgba(37, 99, 235, .22);
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 10px 25px rgba(0,0,0,.10);
+
+      --btn-primary-bg:    var(--primary-700);
+      --btn-primary-fg:    var(--text-inverse);
+      --btn-primary-hover: var(--primary-800);
+
+      --link-fg: var(--accent-700);
+
+      --radius: 16px;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: var(--font);
+      background: var(--surface-page);
+      color: var(--color-text);
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:20px}
+    header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+    h1{margin:0;font-size:20px}
+    .hint{margin:0;color:var(--color-text-muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:420px 1fr;gap:16px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      background: var(--surface-panel);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow:hidden;
+    }
+    .panel-h{padding:14px 16px;border-bottom:1px solid var(--border-default);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .panel-h b{font-size:14px}
+    .panel-b{padding:16px}
+
+    .row{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:10px}
+    label{font-size:13px;color:var(--color-text-muted)}
+    .ctrl{display:flex;gap:10px;align-items:center}
+    input[type="color"]{width:44px;height:36px;border:none;background:transparent;padding:0}
+    input[type="text"]{
+      height:36px;width:100%;
+      padding:8px 10px;
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      font-size: 14px;
+      outline:none;
+      background: var(--surface-panel);
+      color: var(--color-text);
+    }
+    input[type="text"]:focus{
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .btn{
+      border: 1px solid var(--border-default);
+      background: var(--surface-panel);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor:pointer;
+      color: var(--color-text);
+    }
+    .btn:hover{border-color: var(--border-strong)}
+    .toast{
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      background: var(--neutral-900); color:#fff;
+      padding:10px 14px;border-radius:999px;font-size:13px;
+      opacity:0;pointer-events:none;transition:opacity .18s ease
+    }
+    .toast.show{opacity:1}
+
+    .right{
+      display:grid;
+      gap: 14px;
+      padding: 16px;
+    }
+    .card{
+      border:1px solid var(--border-default);
+      border-radius: 18px;
+      background: var(--surface-panel);
+      padding:16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+    @media (max-width: 560px){ .swatches{grid-template-columns:repeat(3,minmax(0,1fr))} }
+    .sw{border-radius:14px;overflow:hidden;border:1px solid var(--border-default);background:var(--surface-panel)}
+    .sw .box{height:54px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px}
+    .sw .meta{padding:8px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--color-text-muted)}
+    .copy{border:none;background:transparent;cursor:pointer;color:inherit;padding:2px 6px;border-radius:8px}
+    .copy:hover{background: rgba(15,23,42,.06)}
+
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding: 6px 10px;border-radius:999px;font-size:12px;
+      background: var(--primary-50);
+      color: var(--primary-800);
+      border: 1px solid rgba(15,118,110,.12);
+    }
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .btn-solid{
+      border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;
+      background: var(--btn-primary-bg); color: var(--btn-primary-fg);
+    }
+    .btn-solid:hover{background: var(--btn-primary-hover)}
+    .btn-outline{
+      border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;background:transparent;
+      border:1px solid rgba(15,118,110,.35);
+      color: var(--primary-800);
+    }
+    .btn-link{
+      border:none;background:transparent;color:var(--link-fg);
+      font-weight:800;cursor:pointer;padding:10px 6px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* Live typography preview */
+    .typo-wrap{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px){ .typo-wrap{grid-template-columns:1fr} }
+    .typo-box{
+      border: 1px solid var(--border-default);
+      border-radius: 16px;
+      overflow:hidden;
+      background: var(--surface-panel);
+    }
+    .typo-h{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-default);
+      display:flex;justify-content:space-between;gap:10px;align-items:center;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      background: var(--surface-soft);
+    }
+    .typo-b{
+      padding: 14px 12px;
+      min-height: 140px;
+    }
+    .t-title{
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      color: var(--text-strong);
+      margin: 0 0 10px 0;
+    }
+    .t-body{
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 0 0 10px 0;
+      color: var(--text-default);
+    }
+    .t-note{
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    /* Contrast table */
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border: 1px solid var(--border-default);
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border-default);
+      text-align:left;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+    th{
+      background: var(--surface-soft);
+      color: var(--color-text);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+    tr:last-child td{border-bottom:none}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      border: 1px solid var(--border-default);
+      background: var(--surface-panel);
+    }
+    .ok{ color: #0f766e; border-color: rgba(15,118,110,.22); background: rgba(15,118,110,.06); }
+    .bad{ color: #b91c1c; border-color: rgba(185,28,28,.22); background: rgba(185,28,28,.06); }
+    .ratio{
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .codebox{
+      background: #0b1020;
+      color: #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre;
+    }
+  
+    /* Quick palette */
+    #quickPalette .chip{
+      height:34px;border-radius:12px;border:1px solid var(--border-default);
+      cursor:pointer; position:relative; overflow:hidden;
+    }
+    #quickPalette .chip:focus-visible{
+      outline:3px solid var(--focus-ring);
+      outline-offset:2px;
+    }
+    #quickPalette .chip::after{
+      content: attr(data-hex);
+      position:absolute; inset:auto 6px 6px 6px;
+      font-size:10px; font-weight:900;
+      padding:2px 6px; border-radius:999px;
+      background: rgba(255,255,255,.72);
+      color: rgba(15,23,42,.88);
+    }
+
+  
+    /* Typography controls */
+    .typo-item{
+      border:1px solid var(--border-default);
+      background: var(--surface-panel);
+      border-radius:14px;
+      padding:10px 10px 8px;
+    }
+    .typo-head{
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:10px; margin-bottom:8px;
+    }
+    .typo-head .muted{ color: var(--color-text-muted); font-size: .85rem; font-weight: 700; }
+    .typo-ctrl{ display:flex; align-items:center; gap:8px; }
+    .typo-ctrl input[type="range"]{ flex:1 1 auto; }
+    .typo-ctrl input[type="number"]{
+      width:86px; height:34px;
+      border-radius:10px;
+      border:1px solid var(--border-default);
+      padding:0 10px;
+      background: var(--surface-panel);
+      color: var(--color-text);
+      font-weight: 800;
+    }
+    .typo-ctrl .unit{ color: var(--color-text-muted); font-weight:800; font-size:.9rem; }
+
+    /* Preview uses typography tokens */
+    .preview h1{ font-size: var(--font-size-h1, 1.75rem); line-height: var(--line-height-title, 1.3); margin:0 0 8px 0; }
+    .preview h2{ font-size: var(--font-size-h2, 1.5rem);  line-height: var(--line-height-title, 1.3); margin:0 0 8px 0; }
+    .preview h3{ font-size: var(--font-size-h3, 1.25rem); line-height: var(--line-height-title, 1.3); margin:0 0 6px 0; }
+    .preview p{  font-size: var(--font-size-body, 1rem);   line-height: var(--line-height-body, 1.7); margin:0 0 6px 0; }
+    .preview .note{ font-size: var(--font-size-note, .875rem); line-height: var(--line-height-note, 1.6); }
+    .preview .small{ font-size: var(--font-size-small, .8125rem); line-height: var(--line-height-note, 1.6); color: var(--color-text-muted); }
+    .preview .btn-demo{ font-size: var(--font-size-btn, 1rem); }
+    .preview .btn-demo.sm{ font-size: var(--font-size-btn-sm, .875rem); }
+
+  
+    /* Button mode demo */
+    .btn-primary-demo{
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-fg);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: .55rem .95rem;
+      font-weight: 900;
+      font-size: var(--font-size-btn, 1rem);
+      line-height: 1.25;
+    }
+    .btn-primary-demo:hover{ background: var(--btn-primary-hover); }
+    .btn-primary-demo.is-hover{ background: var(--btn-primary-hover); }
+    .btn-primary-demo.is-focus{
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+    .btn-primary-demo:disabled{
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+  </style>
+</head>
+
+<body>
+
+        <div class="card" id="modeCard" style="margin-bottom:14px; position:sticky; top:12px; z-index:50;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="font-weight:900;">輸出模式</div>
+            <div id="modeBadge" style="font-weight:900;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border-default);background:var(--surface-panel);">全站 tokens</div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+            <label class="pill"><input type="radio" name="mode" value="full" checked> 全站 tokens</label>
+            <label class="pill"><input type="radio" name="mode" value="button"> 按鈕規格（主按鈕）</label>
+          </div>
+
+          <div class="hint" style="margin-top:8px">
+            ✅ 建議：若你只是要在既有系統加一顆「綠底白字」按鈕（例如「使用舊版」），切到「按鈕規格」後，右側會只顯示按鈕預覽 + 按鈕 CSS 輸出。
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn" type="button" id="btnJumpBtnPreview">跳到按鈕預覽</button>
+            <button class="btn" type="button" id="btnJumpBtnTokens">跳到按鈕輸出</button>
+          </div>
+        </div>
+
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>配色器（含中性色 + 文字 tokens + AA 對比檢查）</h1>
+        <p class="hint">即時顯示標題 / 內文 / 註解預覽，並檢查 WCAG AA 對比（一般文字 4.5:1、較大文字 3:1）。</p>
+      </div>
+
+          <hr style="border:0;border-top:1px solid var(--border-default);margin:14px 0" />
+
+          <div class="row" style="align-items:flex-start">
+            <label>字體大小</label>
+            <div class="ctrl" style="display:block;width:100%">
+              <div class="hint" style="margin:0 0 10px 0">
+                以 <b>rem</b> 表示（1rem = 16px）。你可以直接輸入數字或用滑桿調整；右側會即時預覽並更新 tokens。
+              </div>
+
+              <div class="typo-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+                <div class="typo-item">
+                  <div class="typo-head"><b>H1</b><span class="muted">頁面主標</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsH1" type="range" min="1.25" max="2.25" step="0.05" value="1.75" />
+                    <input id="fsH1Num" type="number" min="1.25" max="2.25" step="0.05" value="1.75" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>H2</b><span class="muted">區塊主標</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsH2" type="range" min="1.15" max="2.00" step="0.05" value="1.50" />
+                    <input id="fsH2Num" type="number" min="1.15" max="2.00" step="0.05" value="1.50" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>H3</b><span class="muted">卡片/小標</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsH3" type="range" min="1.05" max="1.75" step="0.05" value="1.25" />
+                    <input id="fsH3Num" type="number" min="1.05" max="1.75" step="0.05" value="1.25" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>Body</b><span class="muted">內文</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsBody" type="range" min="0.90" max="1.15" step="0.02" value="1.00" />
+                    <input id="fsBodyNum" type="number" min="0.90" max="1.15" step="0.02" value="1.00" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>Note</b><span class="muted">註解</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsNote" type="range" min="0.75" max="1.00" step="0.02" value="0.875" />
+                    <input id="fsNoteNum" type="number" min="0.75" max="1.00" step="0.02" value="0.875" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>Small</b><span class="muted">次要補充</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsSmall" type="range" min="0.70" max="0.95" step="0.02" value="0.8125" />
+                    <input id="fsSmallNum" type="number" min="0.70" max="0.95" step="0.02" value="0.8125" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="typo-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px">
+                <div class="typo-item">
+                  <div class="typo-head"><b>Button</b><span class="muted">一般按鈕</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsBtn" type="range" min="0.85" max="1.10" step="0.02" value="1.00" />
+                    <input id="fsBtnNum" type="number" min="0.85" max="1.10" step="0.02" value="1.00" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+                <div class="typo-item">
+                  <div class="typo-head"><b>Button SM</b><span class="muted">小按鈕</span></div>
+                  <div class="typo-ctrl">
+                    <input id="fsBtnSm" type="range" min="0.75" max="1.00" step="0.02" value="0.875" />
+                    <input id="fsBtnSmNum" type="number" min="0.75" max="1.00" step="0.02" value="0.875" />
+                    <span class="unit">rem</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hint" style="margin-top:10px">
+                AA 小提醒：一般字（Body/Note）對比要 ≥ 4.5:1；「大字」通常是 ≥ 18.66px（約 1.17rem）或粗體 ≥ 14pt 才可用 3:1。
+              </div>
+            </div>
+          </div>
+
+
+      <div class="btns">
+        <button class="btn" id="btnCopyTokens">複製 tokens</button>
+        <button class="btn" id="btnReset">重設</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <!-- 左：控制 -->
+      <div class="panel">
+        <div class="panel-h">
+          <b>色彩設定</b>
+          <span class="hint" aria-live="polite" id="liveStatus"></span>
+        </div>
+        <div class="panel-b">
+          <div class="row">
+            <label for="primaryHex">主色 Primary</label>
+            <div class="ctrl">
+              <input type="color" id="primaryColor" value="#0f766e" aria-label="主色選擇器">
+              <input type="text" id="primaryHex" value="#0f766e" aria-label="主色 HEX">
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="accentHex">輔色 Accent</label>
+            <div class="ctrl">
+              <input type="color" id="accentColor" value="#2563eb" aria-label="輔色選擇器">
+              <input type="text" id="accentHex" value="#2563eb" aria-label="輔色 HEX">
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="neutralHex">中性色 Neutral</label>
+            <div class="ctrl">
+              <input type="color" id="neutralColor" value="#64748b" aria-label="中性色選擇器">
+              <input type="text" id="neutralHex" value="#64748b" aria-label="中性色 HEX">
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="textHex">文字主色 Text</label>
+            <div class="ctrl">
+              <input type="color" id="textColor" value="#0f172a" aria-label="文字色選擇器">
+              <input type="text" id="textHex" value="#0f172a" aria-label="文字 HEX">
+            </div>
+          </div>
+
+          <div class="btns">
+            <button class="btn" id="btnApply">套用</button>
+            <button class="btn" id="btnSwapPA">主/輔對調</button>
+            <button class="btn" id="btnAutoText">文字跟隨 neutral-900</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px">
+            小提醒：AA 對比檢查依「背景（page/panel/soft）」對「文字（標題/內文/註解）」逐格檢查。
+          </div>
+        </div>
+      </div>
+
+
+          <div class="row">
+            <label for="presetSelect">內建色票</label>
+            <div class="ctrl">
+              <select id="presetSelect" aria-label="內建色票選擇" style="height:36px;border-radius:10px;padding:6px 10px;border:1px solid var(--border-default);background:var(--surface-panel);color:var(--color-text);width:100%;">
+                <option value="">— 選擇色票 —</option>
+                <option value="govGreen">公部門綠（穩健）</option>
+                <option value="blueGray">藍灰專業風</option>
+                <option value="softGreen">柔和綠（偏淡）</option>
+                <option value="highContrast">高對比 AA 安全</option>
+                <option value="current">（讀取目前頁面值）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <label>快速色票</label>
+            <div class="ctrl" style="flex-wrap:wrap">
+              <div class="btns" style="margin:0">
+                <button class="btn" type="button" data-target="primary">套到 Primary</button>
+                <button class="btn" type="button" data-target="accent">套到 Accent</button>
+                <button class="btn" type="button" data-target="neutral">套到 Neutral</button>
+                <button class="btn" type="button" data-target="text">套到 Text</button>
+              </div>
+            </div>
+          </div>
+          <div class="hint" style="margin:-6px 0 10px 0">
+            使用方式：先點上面「套到哪個欄位」，再點下面任一色塊，即會自動填入 HEX 並套用。
+          </div>
+
+          <div class="row" style="align-items:start">
+            <label>常用色塊</label>
+            <div class="ctrl" style="display:block;width:100%">
+              <div id="quickPalette" style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px"></div>
+              <div class="hint" style="margin-top:8px">提示：點色塊會填到你選的欄位，並同步更新右側預覽/AA。</div>
+            </div>
+          </div>
+
+
+      <!-- 右：預覽 & 輸出 -->
+      <div class="panel">
+        <div class="panel-h">
+          <b>預覽 / AA 對比 / 輸出</b>
+          <span class="hint">點色塊或「複製」可拷貝 HEX</span>
+        </div>
+
+        <div class="right">
+          <div class="card" id="jumpPreview" data-mode="full">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+              <div>
+                <div style="font-weight:900;font-size:16px;">UI 預覽</div>
+                <div class="hint">按鈕 / 連結 / Badge（跟 tokens 走）</div>
+              </div>
+              <span class="badge">Badge：primary-50 / primary-800</span>
+            </div>
+            <div class="actions">
+              <button class="btn-solid" id="demoBtn">實心主色按鈕</button>
+              <button class="btn-outline">外框主色按鈕</button>
+              <button class="btn-link">輔色連結</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:10px;">標題 / 內文 / 註解 即時預覽（3 種背景）</div>
+            <div class="typo-wrap">
+              <div class="typo-box" id="prevPage">
+                <div class="typo-h">
+                  <span>背景：surface-page</span>
+                  <span class="hint" id="prevPageHex"></span>
+                </div>
+                <div class="typo-b" style="background: var(--surface-page);">
+                  <h2 class="t-title">頁面標題 H2（大字）</h2>
+                  <p class="t-body">這是一段內文。用來檢查一般文字在此背景的 AA 對比（4.5:1）。</p>
+                  <p class="t-note">這是註解 / 提示文字（小字），更容易不通過 AA，需要特別留意。</p>
+                </div>
+              </div>
+
+              <div class="typo-box" id="prevPanel">
+                <div class="typo-h">
+                  <span>背景：surface-panel</span>
+                  <span class="hint" id="prevPanelHex"></span>
+                </div>
+                <div class="typo-b" style="background: var(--surface-panel);">
+                  <h2 class="t-title">卡片標題 H2（大字）</h2>
+                  <p class="t-body">這是一段內文。常見於卡片、表單區塊。</p>
+                  <p class="t-note">註解文字常用在欄位說明、錯誤提示、補充說明。</p>
+                </div>
+              </div>
+
+              <div class="typo-box" id="prevSoft">
+                <div class="typo-h">
+                  <span>背景：surface-soft</span>
+                  <span class="hint" id="prevSoftHex"></span>
+                </div>
+                <div class="typo-b" style="background: var(--surface-soft);">
+                  <h2 class="t-title">區塊標題 H2（大字）</h2>
+                  <p class="t-body">這是一段內文。常見於淡底資訊區、提示區。</p>
+                  <p class="t-note">註解文字在淡底背景可能反而更容易通過，但也要確認。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:10px;">AA 對比檢查（WCAG Contrast Ratio）</div>
+            <table aria-label="AA 對比檢查表">
+              <thead>
+                <tr>
+                  <th>背景</th>
+                  <th>標題（大字）AA ≥ 3</th>
+                  <th>內文（一般）AA ≥ 4.5</th>
+                  <th>註解（小字）AA ≥ 4.5</th>
+                </tr>
+              </thead>
+              <tbody id="contrastRows"></tbody>
+            </table>
+            <div class="hint" style="margin-top:10px;">
+              註：這裡依 WCAG 2.x 的對比計算；標題視為「較大文字」用 3:1，內文/註解用 4.5:1。
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:10px;">Neutral（灰階）</div>
+            <div class="swatches" id="neutralSwatches"></div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:10px;">Primary</div>
+            <div class="swatches" id="primarySwatches"></div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;margin-bottom:10px;">Accent</div>
+            <div class="swatches" id="accentSwatches"></div>
+          </div>
+
+          
+          <!-- Button mode: preview -->
+          <div class="card" id="btnModePreview" data-mode="button" style="display:none">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+              <div>
+                <div style="font-weight:900;font-size:16px;">按鈕預覽（主按鈕：綠底白字）</div>
+                <div class="hint">狀態：Normal / Hover / Focus / Disabled</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+              <button type="button" class="btn btn-primary-demo" id="btnDemoNormal">主按鈕（Normal）</button>
+              <button type="button" class="btn btn-primary-demo is-hover" id="btnDemoHover">主按鈕（Hover）</button>
+              <button type="button" class="btn btn-primary-demo is-focus" id="btnDemoFocus">主按鈕（Focus）</button>
+              <button type="button" class="btn btn-primary-demo" id="btnDemoDisabled" disabled>主按鈕（Disabled）</button>
+            </div>
+
+            <div class="hint" style="margin-top:10px">
+              建議：Hover 只調深一階（primary-800）、Focus 用外框（focus-ring），Disabled 建議降低不透明度並保留可辨識度。
+            </div>
+          </div>
+
+          <!-- Button mode: output -->
+          <div class="card" id="btnModeTokens" data-mode="button" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div style="font-weight:900;">按鈕規格輸出（可直接貼到既有系統 CSS）</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" type="button" id="copyBtnSpec">複製按鈕規格</button>
+              </div>
+            </div>
+
+            <div class="hint" style="margin-top:8px">
+              只包含新增按鈕會用到的 tokens + CSS class（不會影響既有頁面其他元件）。
+            </div>
+
+            <textarea id="btnSpecOut" spellcheck="false" style="width:100%;height:240px;margin-top:10px;font-family:ui-monospace,Consolas,monospace;border:1px solid var(--border-default);border-radius:14px;padding:12px;background:var(--surface-panel);color:var(--color-text);"></textarea>
+          </div>
+
+          <div class="card" id="jumpTokens" data-mode="full">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div style="font-weight:900;">Tokens 輸出（可直接貼到 CSS）</div>
+              <button class="btn" id="btnCopyCode">複製</button>
+            </div>
+            <div class="codebox" id="codeOut"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  
+  <!-- Floating jump buttons -->
+  <div class="jumpbar" aria-label="快速跳轉">
+    <button type="button" class="btn jumpbtn" id="btnJumpPreview" title="跳到預覽">預覽</button>
+    <button type="button" class="btn jumpbtn" id="btnJumpTokens" title="跳到 tokens">tokens</button>
+    <button type="button" class="btn jumpbtn" id="btnJumpTop" title="回到上方">↑</button>
+  </div>
+
+
+  <div class="toast" id="toast" role="status" aria-live="polite">已複製</div>
+
+  <script>
+    const $ = (s)=>document.querySelector(s);
+
+    /* ---------- presets & quick palette ---------- */
+    const PRESETS = {
+      govGreen:    { primary:"#0f766e", accent:"#2563eb", neutral:"#64748b", text:"#0f172a" },
+      blueGray:    { primary:"#1f3a5f", accent:"#2563eb", neutral:"#6b7280", text:"#111827" },
+      softGreen:   { primary:"#3aa78f", accent:"#3b82f6", neutral:"#8b9ea0", text:"#1f2933" },
+      highContrast:{ primary:"#064e3b", accent:"#1d4ed8", neutral:"#374151", text:"#020617" },
+    };
+
+    // Quick palette colors
+    const QUICK_COLORS = [
+      // neutrals
+      "#ffffff","#f8fafc","#f1f5f9","#e2e8f0","#cbd5e1","#94a3b8","#64748b","#475569","#334155","#0f172a",
+      // greens/teals
+      "#f0fdfa","#ccfbf1","#99f6e4","#5eead4","#2dd4bf","#14b8a6","#0d9488","#0f766e","#115e59","#134e4a",
+      // blues
+      "#eff6ff","#dbeafe","#bfdbfe","#93c5fd","#60a5fa","#3b82f6","#2563eb","#1d4ed8","#1e40af","#1e3a8a",
+      // ambers / reds
+      "#fffbeb","#fef3c7","#fcd34d","#f59e0b","#b45309",
+      "#fef2f2","#fecaca","#f87171","#ef4444","#b91c1c",
+      // purples
+      "#faf5ff","#e9d5ff","#c4b5fd","#8b5cf6","#6d28d9",
+    ];
+
+    let paletteTarget = "primary";
+
+    function setPaletteTarget(t){
+      paletteTarget = t;
+      document.querySelectorAll('[data-target]').forEach(btn=>{
+        btn.style.borderColor = (btn.getAttribute("data-target") === t) ? "var(--border-strong)" : "var(--border-default)";
+        btn.style.boxShadow  = (btn.getAttribute("data-target") === t) ? "0 0 0 4px var(--focus-ring)" : "none";
+      });
+      toast("色票套用目標：" + ({primary:"Primary",accent:"Accent",neutral:"Neutral",text:"Text"}[t] || t));
+    }
+
+    function renderQuickPalette(){
+      const box = document.getElementById("quickPalette");
+      if(!box) return;
+      box.innerHTML = "";
+      QUICK_COLORS.forEach(hex=>{
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.style.background = hex;
+        chip.setAttribute("data-hex", hex.toUpperCase());
+        chip.setAttribute("aria-label", "選擇色票 " + hex.toUpperCase());
+        chip.addEventListener("click", ()=>{
+          const h = hex.toLowerCase();
+          if(paletteTarget === "primary"){ $("#primaryHex").value = h; }
+          if(paletteTarget === "accent") { $("#accentHex").value  = h; }
+          if(paletteTarget === "neutral"){ $("#neutralHex").value = h; }
+          if(paletteTarget === "text")   { $("#textHex").value    = h; }
+          apply();
+        });
+        box.appendChild(chip);
+      });
+    }
+
+    function bindPresetSelect(){
+      const sel = document.getElementById("presetSelect");
+      if(!sel) return;
+      sel.addEventListener("change", (e)=>{
+        const key = e.target.value;
+        if(key === "current"){
+          toast("已保持目前數值");
+          return;
+        }
+        const p = PRESETS[key];
+        if(!p) return;
+        $("#primaryHex").value = p.primary;
+        $("#accentHex").value  = p.accent;
+        $("#neutralHex").value = p.neutral;
+        $("#textHex").value    = p.text;
+        apply();
+        toast("已套用色票");
+      });
+    }
+
+    function bindPaletteTargetBtns(){
+      document.querySelectorAll('[data-target]').forEach(btn=>{
+        btn.addEventListener("click", ()=> setPaletteTarget(btn.getAttribute("data-target")));
+      });
+    }
+
+
+    /* ---------- helpers ---------- */
+    function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+
+    function normalizeHex(v){
+      v = String(v||"").trim();
+      if(!v) return null;
+      if(!v.startsWith("#")) v = "#" + v;
+      if(/^#([0-9a-f]{6})$/i.test(v)) return v.toLowerCase();
+      return null;
+    }
+    function hexToRgb(hex){
+      const m = String(hex).trim().match(/^#?([0-9a-f]{6})$/i);
+      if(!m) return null;
+      const v = m[1];
+      return { r:parseInt(v.slice(0,2),16), g:parseInt(v.slice(2,4),16), b:parseInt(v.slice(4,6),16) };
+    }
+    function rgbToHex({r,g,b}){
+      const h=(n)=>n.toString(16).padStart(2,"0");
+      return "#" + h(r) + h(g) + h(b);
+    }
+
+    // HSL helpers
+    function rgbToHsl({r,g,b}){
+      r/=255; g/=255; b/=255;
+      const max=Math.max(r,g,b), min=Math.min(r,g,b);
+      let h,s,l=(max+min)/2;
+      if(max===min){ h=s=0; }
+      else{
+        const d=max-min;
+        s = l>0.5 ? d/(2-max-min) : d/(max+min);
+        switch(max){
+          case r: h=(g-b)/d + (g<b?6:0); break;
+          case g: h=(b-r)/d + 2; break;
+          case b: h=(r-g)/d + 4; break;
+        }
+        h/=6;
+      }
+      return {h,s,l};
+    }
+    function hslToRgb({h,s,l}){
+      let r,g,b;
+      if(s===0){ r=g=b=l; }
+      else{
+        const hue2rgb=(p,q,t)=>{
+          if(t<0) t+=1;
+          if(t>1) t-=1;
+          if(t<1/6) return p+(q-p)*6*t;
+          if(t<1/2) return q;
+          if(t<2/3) return p+(q-p)*(2/3-t)*6;
+          return p;
+        };
+        const q = l<0.5 ? l*(1+s) : l + s - l*s;
+        const p = 2*l - q;
+        r=hue2rgb(p,q,h+1/3);
+        g=hue2rgb(p,q,h);
+        b=hue2rgb(p,q,h-1/3);
+      }
+      return {r:Math.round(r*255), g:Math.round(g*255), b:Math.round(b*255)};
+    }
+
+    /* ---------- scales ---------- */
+    const steps = [
+      {k:50,  l:0.95},{k:100,l:0.88},{k:200,l:0.78},{k:300,l:0.66},{k:400,l:0.54},
+      {k:500,l:0.45},{k:600,l:0.36},{k:700,l:0.28},{k:800,l:0.20},{k:900,l:0.13},
+    ];
+    function colorScale(baseHex, anchor=700){
+      const rgb = hexToRgb(baseHex); if(!rgb) return null;
+      const hsl = rgbToHsl(rgb);
+      const out = {};
+      steps.forEach(st=>{
+        const c = hslToRgb({h:hsl.h, s:clamp(hsl.s,0,1), l:clamp(st.l,0,1)});
+        out[st.k] = rgbToHex(c);
+      });
+      out[anchor] = baseHex.toLowerCase();
+      return out;
+    }
+    function neutralScale(baseHex){
+      const rgb = hexToRgb(baseHex); if(!rgb) return null;
+      const hsl = rgbToHsl(rgb);
+      const out = {};
+      const s = Math.min(hsl.s, 0.12); // 壓低飽和
+      const map = [
+        {k:50,l:0.97},{k:100,l:0.94},{k:200,l:0.88},{k:300,l:0.80},{k:400,l:0.66},
+        {k:500,l:0.52},{k:600,l:0.40},{k:700,l:0.30},{k:800,l:0.20},{k:900,l:0.12},
+        {k:950,l:0.06},
+      ];
+      out[0] = "#ffffff";
+      map.forEach(st=>{
+        out[st.k] = rgbToHex(hslToRgb({h:hsl.h, s, l:st.l}));
+      });
+      out[500] = baseHex.toLowerCase();
+      return out;
+    }
+
+    /* ---------- text tokens ---------- */
+    function textTokens(baseHex){
+      const rgb = hexToRgb(baseHex); if(!rgb) return null;
+      const hsl = rgbToHsl(rgb);
+
+      // strong: 更深
+      const strong = hslToRgb({ h:hsl.h, s:clamp(hsl.s,0,1), l: clamp(hsl.l * 0.70, 0, 1) });
+
+      // default: 原色
+      const def = baseHex.toLowerCase();
+
+      // muted: 提亮 + 降飽和（更像「灰一階」）
+      const muted = hslToRgb({
+        h: hsl.h,
+        s: Math.min(hsl.s * 0.35, 0.10),
+        l: clamp(hsl.l + 0.22, 0, 1)
+      });
+
+      return {
+        strong: rgbToHex(strong),
+        default: def,
+        muted: rgbToHex(muted),
+        inverse: "#ffffff"
+      };
+    }
+
+    /* ---------- contrast (WCAG) ---------- */
+    function relLuminanceFromRgb({r,g,b}){
+      const toLin=(c)=>{
+        c/=255;
+        return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+      };
+      const R=toLin(r), G=toLin(g), B=toLin(b);
+      return 0.2126*R + 0.7152*G + 0.0722*B;
+    }
+    function contrastRatio(fgHex, bgHex){
+      const fg = hexToRgb(fgHex), bg = hexToRgb(bgHex);
+      if(!fg || !bg) return null;
+      const L1 = relLuminanceFromRgb(fg);
+      const L2 = relLuminanceFromRgb(bg);
+      const lighter = Math.max(L1,L2);
+      const darker  = Math.min(L1,L2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    /* ---------- UI ---------- */
+    function toast(msg){
+      const t = $("#toast");
+      t.textContent = msg || "已複製";
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 900);
+    }
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        toast("已複製");
+      }catch(e){
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        toast("已複製");
+      }
+    }
+
+    function renderSwatches(targetEl, prefix, scale){
+      targetEl.innerHTML = "";
+      const keys = Object.keys(scale).map(Number).sort((a,b)=>a-b);
+      keys.forEach(k=>{
+        const hex = scale[k];
+        const el = document.createElement("div");
+        el.className = "sw";
+        // swatch 的文字色：用黑/白簡單判斷
+        const ratioToWhite = contrastRatio("#ffffff", hex) ?? 1;
+        const ratioToBlack = contrastRatio("#000000", hex) ?? 1;
+        const txt = ratioToWhite >= ratioToBlack ? "#ffffff" : "#111827";
+
+        el.innerHTML = `
+          <div class="box" style="background:${hex}; color:${txt}">${prefix}-${k}</div>
+          <div class="meta">
+            <span>${hex.toUpperCase()}</span>
+            <button class="copy" type="button">複製</button>
+          </div>`;
+        el.querySelector(".copy").addEventListener("click", ()=>copyText(hex.toUpperCase()));
+        el.querySelector(".box").addEventListener("click", ()=>copyText(hex.toUpperCase()));
+        targetEl.appendChild(el);
+      });
+    }
+
+    function setVars(prefix, scale){
+      const root = document.documentElement.style;
+      Object.entries(scale).forEach(([k,v])=>root.setProperty(`--${prefix}-${k}`, v));
+    }
+
+    function rgbaFromHex(hex, a){
+      const rgb = hexToRgb(hex); if(!rgb) return `rgba(0,0,0,${a})`;
+      return `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`;
+    }
+
+    function formatRatio(n){
+      if(n==null) return "-";
+      // 保留兩位小數
+      return (Math.round(n*100)/100).toFixed(2) + ":1";
+    }
+
+    function passPill(ok){
+      return `<span class="pill ${ok ? "ok":"bad"}">${ok ? "PASS":"FAIL"}</span>`;
+    }
+
+    function updateContrastTable(bgList, textSet){
+      const tbody = $("#contrastRows");
+      tbody.innerHTML = "";
+
+      // thresholds
+      const TH_LARGE = 3.0;  // 標題（大字）
+      const TH_NORM  = 4.5;  // 內文/註解
+
+      bgList.forEach(bg=>{
+        const rTitle = contrastRatio(textSet.title, bg.hex);
+        const rBody  = contrastRatio(textSet.body,  bg.hex);
+        const rNote  = contrastRatio(textSet.note,  bg.hex);
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.12);background:${bg.hex}"></span>
+              <div>
+                <div style="font-weight:900">${bg.name}</div>
+                <div class="hint">${bg.hex.toUpperCase()}</div>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="ratio">${formatRatio(rTitle)}</span>
+              ${passPill((rTitle ?? 0) >= TH_LARGE)}
+            </div>
+          </td>
+
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="ratio">${formatRatio(rBody)}</span>
+              ${passPill((rBody ?? 0) >= TH_NORM)}
+            </div>
+          </td>
+
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="ratio">${formatRatio(rNote)}</span>
+              ${passPill((rNote ?? 0) >= TH_NORM)}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function buildTokens(neu, pri, acc, txt){
+      // 你之後可直接把這段貼去你的共用 CSS
+      const tokens =
+`:root{
+  /* ===== Base colors ===== */
+  --primary:   ${normalizeHex($("#primaryHex").value)};
+  --accent:    ${normalizeHex($("#accentHex").value)};
+  --neutral:   ${normalizeHex($("#neutralHex").value)};
+  --text-base: ${normalizeHex($("#textHex").value)};
+
+  /* ===== Text tokens ===== */
+  --text-strong:  ${txt.strong};
+  --text-default: ${txt.default};
+  --text-muted:   ${txt.muted};
+  --text-inverse: ${txt.inverse};
+
+  --color-text:         var(--text-default);
+  --color-text-muted:   var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  /* ===== Neutral scale ===== */
+  --neutral-0:   ${neu[0]};
+  --neutral-50:  ${neu[50]};
+  --neutral-100: ${neu[100]};
+  --neutral-200: ${neu[200]};
+  --neutral-300: ${neu[300]};
+  --neutral-400: ${neu[400]};
+  --neutral-500: ${neu[500]};
+  --neutral-600: ${neu[600]};
+  --neutral-700: ${neu[700]};
+  --neutral-800: ${neu[800]};
+  --neutral-900: ${neu[900]};
+  --neutral-950: ${neu[950]};
+
+  /* ===== Primary scale ===== */
+  --primary-50:  ${pri[50]};
+  --primary-100: ${pri[100]};
+  --primary-200: ${pri[200]};
+  --primary-300: ${pri[300]};
+  --primary-400: ${pri[400]};
+  --primary-500: ${pri[500]};
+  --primary-600: ${pri[600]};
+  --primary-700: ${pri[700]};
+  --primary-800: ${pri[800]};
+  --primary-900: ${pri[900]};
+
+  /* ===== Accent scale ===== */
+  --accent-50:  ${acc[50]};
+  --accent-100: ${acc[100]};
+  --accent-200: ${acc[200]};
+  --accent-300: ${acc[300]};
+  --accent-400: ${acc[400]};
+  --accent-500: ${acc[500]};
+  --accent-600: ${acc[600]};
+  --accent-700: ${acc[700]};
+  --accent-800: ${acc[800]};
+  --accent-900: ${acc[900]};
+
+  /* ===== Surface tokens ===== */
+  --surface-page:  var(--neutral-50);
+  --surface-panel: var(--neutral-0);
+  --surface-soft:  var(--neutral-100);
+
+  /* ===== Border / focus ===== */
+  --border-default: ${getComputedStyle(document.documentElement).getPropertyValue("--border-default").trim()};
+  --border-strong:  ${getComputedStyle(document.documentElement).getPropertyValue("--border-strong").trim()};
+  --focus-ring:     ${getComputedStyle(document.documentElement).getPropertyValue("--focus-ring").trim()};
+
+  /* ===== Shadow ===== */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 10px 25px rgba(0,0,0,.10);
+
+  /* ===== Components ===== */
+  --btn-primary-bg:    var(--primary-700);
+  --btn-primary-fg:    var(--text-inverse);
+  --btn-primary-hover: var(--primary-800);
+  --link-fg:           var(--accent-700);
+}`;
+      return tokens;
+    }
+
+    function updateSurfaceHexLabels(){
+      const cs = getComputedStyle(document.documentElement);
+      $("#prevPageHex").textContent  = cs.getPropertyValue("--surface-page").trim().toUpperCase();
+      $("#prevPanelHex").textContent = cs.getPropertyValue("--surface-panel").trim().toUpperCase();
+      $("#prevSoftHex").textContent  = cs.getPropertyValue("--surface-soft").trim().toUpperCase();
+    }
+
+    function apply(){
+      const pHex = normalizeHex($("#primaryHex").value);
+      const aHex = normalizeHex($("#accentHex").value);
+      const nHex = normalizeHex($("#neutralHex").value);
+      const tHex = normalizeHex($("#textHex").value);
+
+      if(!pHex || !aHex || !nHex || !tHex){
+        $("#liveStatus").textContent = "HEX 格式需為 #RRGGBB";
+        return;
+    setTypographyVars(readTypographyFromUI());
+    if(window.__currentMode === "button"){ renderButtonSpec(); }
+      }
+      $("#liveStatus").textContent = "";
+
+      // scales
+      const pri = colorScale(pHex, 700);
+      const acc = colorScale(aHex, 600);
+      const neu = neutralScale(nHex);
+      const txt = textTokens(tHex);
+
+      // set base vars
+      const root = document.documentElement.style;
+      root.setProperty("--primary", pHex);
+      root.setProperty("--accent",  aHex);
+      root.setProperty("--neutral", nHex);
+      root.setProperty("--text-base", tHex);
+
+      setVars("primary", pri);
+      setVars("accent",  acc);
+      setVars("neutral", neu);
+
+      // text vars
+      root.setProperty("--text-strong",  txt.strong);
+      root.setProperty("--text-default", txt.default);
+      root.setProperty("--text-muted",   txt.muted);
+      root.setProperty("--text-inverse", txt.inverse);
+
+      // border/focus rgba based on neutral/accent
+      root.setProperty("--border-default", rgbaFromHex(neu[900], 0.12));
+      root.setProperty("--border-strong",  rgbaFromHex(neu[900], 0.18));
+      root.setProperty("--focus-ring",     rgbaFromHex(acc[600], 0.22));
+
+      // sync color inputs
+      $("#primaryColor").value = pHex;
+      $("#accentColor").value  = aHex;
+      $("#neutralColor").value = nHex;
+      $("#textColor").value    = tHex;
+
+      // render swatches
+      renderSwatches($("#neutralSwatches"), "neutral", neu);
+      renderSwatches($("#primarySwatches"), "primary", pri);
+      renderSwatches($("#accentSwatches"),  "accent",  acc);
+
+      // update preview surface labels
+      updateSurfaceHexLabels();
+
+      // AA contrast table: backgrounds vs texts
+      const bgList = [
+        {name:"surface-page",  hex: neu[50]},
+        {name:"surface-panel", hex: neu[0]},
+        {name:"surface-soft",  hex: neu[100]},
+      ];
+      const textSet = {
+        title: txt.strong,    // 標題用 strong
+        body:  txt.default,   // 內文用 default
+        note:  txt.muted      // 註解用 muted
+      };
+      updateContrastTable(bgList, textSet);
+
+      // output tokens
+      $("#codeOut").textContent = buildTokens(neu, pri, acc, txt);
+    }
+
+    function resetAll(){
+      $("#primaryHex").value = "#0f766e";
+      $("#accentHex").value  = "#2563eb";
+      $("#neutralHex").value = "#64748b";
+      $("#textHex").value    = "#0f172a";
+      apply();
+      toast("已重設");
+    }
+
+    /* ---------- events ---------- */
+    $("#btnApply").addEventListener("click", apply);
+    $("#btnReset").addEventListener("click", resetAll);
+
+    $("#btnSwapPA").addEventListener("click", ()=>{
+      const p = $("#primaryHex").value;
+      $("#primaryHex").value = $("#accentHex").value;
+      $("#accentHex").value = p;
+      apply();
+      toast("已對調");
+    });
+
+    $("#btnAutoText").addEventListener("click", ()=>{
+      // 讓文字跟隨 neutral-900
+      const nHex = normalizeHex($("#neutralHex").value);
+      if(!nHex){ return; }
+      const neu = neutralScale(nHex);
+      $("#textHex").value = neu[900];
+      apply();
+      toast("已套用 neutral-900");
+    });
+
+    // live update
+    $("#primaryColor").addEventListener("input", e=>{ $("#primaryHex").value = e.target.value; apply(); });
+    $("#accentColor").addEventListener("input",  e=>{ $("#accentHex").value  = e.target.value; apply(); });
+    $("#neutralColor").addEventListener("input", e=>{ $("#neutralHex").value = e.target.value; apply(); });
+    $("#textColor").addEventListener("input",    e=>{ $("#textHex").value    = e.target.value; apply(); });
+
+    $("#primaryHex").addEventListener("change", apply);
+    $("#accentHex").addEventListener("change",  apply);
+    $("#neutralHex").addEventListener("change", apply);
+    $("#textHex").addEventListener("change",    apply);
+
+    $("#btnCopyCode").addEventListener("click", ()=>copyText($("#codeOut").textContent));
+    $("#btnCopyTokens").addEventListener("click", ()=>copyText($("#codeOut").textContent));
+
+    /* ---------- typography ---------- */
+    function bindPair(rangeId, numId, onChange){
+      const r = document.getElementById(rangeId);
+      const n = document.getElementById(numId);
+      if(!r || !n) return;
+      const sync = (fromRange)=>{
+        if(fromRange){ n.value = r.value; }
+        else { r.value = n.value; }
+        onChange(parseFloat(r.value));
+      };
+      r.addEventListener("input", ()=> sync(true));
+      n.addEventListener("input", ()=> sync(false));
+      sync(true);
+    }
+
+    const TYPO_DEFAULTS = {
+      h1: 1.75, h2: 1.50, h3: 1.25,
+      body: 1.00, note: 0.875, small: 0.8125,
+      btn: 1.00, btnSm: 0.875,
+      lhTitle: 1.3, lhBody: 1.7, lhNote: 1.6
+    };
+
+    function setTypographyVars(v){
+      const root = document.documentElement.style;
+      root.setProperty("--font-size-h1", v.h1 + "rem");
+      root.setProperty("--font-size-h2", v.h2 + "rem");
+      root.setProperty("--font-size-h3", v.h3 + "rem");
+      root.setProperty("--font-size-body", v.body + "rem");
+      root.setProperty("--font-size-note", v.note + "rem");
+      root.setProperty("--font-size-small", v.small + "rem");
+      root.setProperty("--font-size-btn", v.btn + "rem");
+      root.setProperty("--font-size-btn-sm", v.btnSm + "rem");
+      root.setProperty("--line-height-title", String(v.lhTitle));
+      root.setProperty("--line-height-body",  String(v.lhBody));
+      root.setProperty("--line-height-note",  String(v.lhNote));
+    }
+
+    function readTypographyFromUI(){
+      const get = (id, fallback)=>{
+        const el = document.getElementById(id);
+        if(!el) return fallback;
+        const val = parseFloat(el.value);
+        return Number.isFinite(val) ? val : fallback;
+      };
+      return {
+        h1: get("fsH1", TYPO_DEFAULTS.h1),
+        h2: get("fsH2", TYPO_DEFAULTS.h2),
+        h3: get("fsH3", TYPO_DEFAULTS.h3),
+        body: get("fsBody", TYPO_DEFAULTS.body),
+        note: get("fsNote", TYPO_DEFAULTS.note),
+        small: get("fsSmall", TYPO_DEFAULTS.small),
+        btn: get("fsBtn", TYPO_DEFAULTS.btn),
+        btnSm: get("fsBtnSm", TYPO_DEFAULTS.btnSm),
+        lhTitle: TYPO_DEFAULTS.lhTitle,
+        lhBody: TYPO_DEFAULTS.lhBody,
+        lhNote: TYPO_DEFAULTS.lhNote
+      };
+    }
+
+    /* ---------- button mode ---------- */
+
+    function updateModeBadge(mode){
+      const b = document.getElementById("modeBadge");
+      if(!b) return;
+      if(mode === "button"){ b.textContent = "按鈕規格"; }
+      else { b.textContent = "全站 tokens"; }
+    }
+
+    function getCssVar(name, fallback=""){
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return v || fallback;
+    }
+
+    function buildButtonSpec(){
+      const bg = getCssVar("--btn-primary-bg");
+      const fg = getCssVar("--btn-primary-fg");
+      const hover = getCssVar("--btn-primary-hover");
+      const ring = getCssVar("--focus-ring", "rgba(37,99,235,0.22)");
+      const fsBtn = getCssVar("--font-size-btn", "1rem");
+      const fsBtnSm = getCssVar("--font-size-btn-sm", ".875rem");
+      const radius = "12px";
+
+      return `/* ===== Button tokens (主按鈕：綠底白字) ===== */
+:root{
+  --btn-primary-bg: ${bg};
+  --btn-primary-fg: ${fg};
+  --btn-primary-hover: ${hover};
+  --focus-ring: ${ring};
+  --font-size-btn: ${fsBtn};
+  --font-size-btn-sm: ${fsBtnSm};
+}
+
+/* ===== Button CSS (只影響你新增的按鈕 class) ===== */
+.btn-primary{
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border: 1px solid transparent;
+  border-radius: ${radius};
+  padding: .55rem .95rem;
+  font-weight: 900;
+  font-size: var(--font-size-btn);
+  line-height: 1.25;
+  cursor: pointer;
+}
+.btn-primary:hover{ background: var(--btn-primary-hover); }
+.btn-primary:focus-visible{ outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.btn-primary:disabled{ opacity: .55; cursor: not-allowed; }
+
+/* 小按鈕（若你要做較小的「使用舊版」） */
+.btn-primary.btn-sm{
+  padding: .45rem .8rem;
+  font-size: var(--font-size-btn-sm);
+}`;
+    }
+
+    function renderButtonSpec(){
+      const ta = document.getElementById("btnSpecOut");
+      if(!ta) return;
+      ta.value = buildButtonSpec();
+    }
+
+    function setMode(mode){
+      document.querySelectorAll('[data-mode]').forEach(el=>{
+        const m = el.getAttribute("data-mode");
+        el.style.display = (m === mode) ? "" : "none";
+      });
+      // jump buttons: when in button mode, jumpTokens should scroll to btnModeTokens
+      window.__currentMode = mode;
+      updateModeBadge(mode);
+      const jb1=document.getElementById("btnJumpBtnPreview");
+      const jb2=document.getElementById("btnJumpBtnTokens");
+      if(jb1) jb1.style.display = (mode==="button") ? "" : "none";
+      if(jb2) jb2.style.display = (mode==="button") ? "" : "none";
+      if(mode === "button"){
+        renderButtonSpec();
+        toast("已切換：按鈕規格模式");
+      }else{
+        toast("已切換：全站 tokens");
+      }
+    }
+
+    function bindModeToggle(){
+      const radios = document.querySelectorAll('input[name="mode"]');
+      radios.forEach(r=>{
+        r.addEventListener("change", ()=>{
+          if(r.checked) setMode(r.value);
+        });
+      });
+    }
+
+    document.getElementById("copyBtnSpec")?.addEventListener("click", ()=>{
+      const ta = document.getElementById("btnSpecOut");
+      if(!ta) return;
+      ta.select();
+      document.execCommand("copy");
+      toast("已複製按鈕規格");
+    });
+
+
+
+
+    // init
+    bindModeToggle();
+    setMode('full');
+    renderQuickPalette();
+    bindPresetSelect();
+    bindPaletteTargetBtns();
+    setPaletteTarget('primary');
+
+    // typography bindings
+    bindPair("fsH1","fsH1Num", ()=> apply());
+    bindPair("fsH2","fsH2Num", ()=> apply());
+    bindPair("fsH3","fsH3Num", ()=> apply());
+    bindPair("fsBody","fsBodyNum", ()=> apply());
+    bindPair("fsNote","fsNoteNum", ()=> apply());
+    bindPair("fsSmall","fsSmallNum", ()=> apply());
+    bindPair("fsBtn","fsBtnNum", ()=> apply());
+    bindPair("fsBtnSm","fsBtnSmNum", ()=> apply());
+
+    apply();
+  </script>
+</body>
+</html>

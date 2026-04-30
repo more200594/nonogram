@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="night">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>誇誇群 ULTIMATE+++｜正常頭像 × 特徵建議 × 角色固定 × 超浮誇</title>
+<style>
+:root{
+  --bg:#0b1020; --stroke:rgba(255,255,255,.16); --text:#fff; --muted:rgba(255,255,255,.72);
+  --mint:#c9f2e6; --sun:#ffe7a6; --sky:#cfe7ff; --pink:#ffd6e8; --leaf:#bfe7b8;
+  --radius:18px; --shadow:0 18px 46px rgba(0,0,0,.45);
+  --sans: system-ui, -apple-system, "Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--sans);color:var(--text);
+  background:
+   radial-gradient(900px 500px at 10% 0%, rgba(255,214,232,.28), transparent 60%),
+   radial-gradient(900px 500px at 90% 10%, rgba(201,242,230,.28), transparent 60%),
+   radial-gradient(1000px 600px at 50% 100%, rgba(255,231,166,.25), transparent 60%),
+   var(--bg);
+  min-height:100vh;
+}
+header{max-width:1200px;margin:auto;padding:20px}
+h1{margin:0;font-size:26px;letter-spacing:.2px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{padding:6px 10px;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
+.sub{color:var(--muted);margin-top:8px;font-size:14px;line-height:1.7}
+
+.wrap{max-width:1200px;margin:auto;padding:10px 20px 30px;display:grid;grid-template-columns:460px 1fr;gap:16px}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panelHeader{padding:12px 14px;border-bottom:1px solid var(--stroke);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.panelHeader .hint{font-size:12px;color:var(--muted)}
+.panelBody{padding:14px}
+
+table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--stroke);border-radius:14px;background:rgba(255,255,255,.06)}
+th,td{padding:10px;border-bottom:1px solid var(--stroke);vertical-align:top}
+tr:last-child th,tr:last-child td{border-bottom:none}
+th{width:94px;color:var(--muted);text-align:left}
+
+input,textarea,select{
+ width:100%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.18);color:#fff;
+ border-radius:12px;padding:10px;font-size:14px;outline:none
+}
+textarea{min-height:96px;resize:vertical;line-height:1.55}
+input:focus,textarea:focus,select:focus{border-color:rgba(201,242,230,.85);box-shadow:0 0 0 3px rgba(201,242,230,.22)}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{
+ border:none;border-radius:14px;padding:11px 14px;font-weight:900;
+ background:linear-gradient(135deg,var(--mint),var(--sun));cursor:pointer;
+ transition:transform .08s ease, filter .15s ease;
+}
+button:hover{filter:brightness(1.05)}
+button:active{transform:translateY(1px) scale(.99)}
+.ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--stroke)}
+
+.mini{font-size:12px;color:var(--muted);padding:8px 10px;border:1px dashed rgba(255,255,255,.25);border-radius:14px;background:rgba(0,0,0,.14)}
+.kbd{font-family:var(--mono);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.18);color:rgba(255,255,255,.8)}
+
+.traitBox{margin-top:10px;display:grid;grid-template-columns:1fr;gap:8px}
+.traitGroup{border:1px dashed rgba(255,255,255,.22);border-radius:12px;padding:8px;background:rgba(0,0,0,.12)}
+.traitGroup b{font-size:12px;color:rgba(255,255,255,.9)}
+.traitTags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.traitTag{
+  font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);cursor:pointer;user-select:none
+}
+.traitTag:hover{background:rgba(201,242,230,.25);border-color:rgba(201,242,230,.8)}
+
+.chatArea{padding:14px;min-height:540px;display:flex;flex-direction:column;gap:12px}
+.empty{border:1px dashed rgba(255,255,255,.25);padding:18px;border-radius:16px;color:var(--muted);line-height:1.7}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:pop .2s ease both}
+@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+
+.avatar{
+  width:56px;height:56px;border-radius:18px;border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
+  overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.25)
+}
+.avatar svg{width:100%;height:100%}
+
+.bubble{
+ background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.06));
+ border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:10px 12px;position:relative;max-width:860px;cursor:pointer
+}
+.bubble:before{
+ content:"";position:absolute;left:-6px;top:22px;width:12px;height:12px;background:inherit;
+ border-left:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25);transform:rotate(45deg)
+}
+.who{font-size:12px;color:rgba(255,255,255,.84);margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.2)}
+.tag.hot{border-color:rgba(255,231,166,.6);background:rgba(255,231,166,.18);color:#2b240f}
+.text{font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+
+.footerRow{margin-top:auto;display:flex;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.2);padding-top:10px;font-size:12px;color:var(--muted)}
+.toast{
+ position:fixed;right:16px;bottom:16px;max-width:min(520px, calc(100vw - 32px));
+ padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.2);
+ background:rgba(10,18,32,.92);color:rgba(255,255,255,.92);box-shadow:0 18px 44px rgba(0,0,0,.45);
+ opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s ease, transform .2s ease;
+ font-size:13px;line-height:1.55;z-index:9999
+}
+.toast.show{opacity:1;transform:none}
+
+/* ===== Theme Switcher (新增) ===== */
+:root{
+  --blob1: rgba(255,214,232,.28);
+  --blob2: rgba(201,242,230,.28);
+  --blob3: rgba(255,231,166,.25);
+  --panelTop: rgba(255,255,255,.12);
+  --panelBot: rgba(255,255,255,.04);
+  --chipBg: rgba(255,255,255,.08);
+  --inputBg: rgba(0,0,0,.18);
+  --bubbleTop: rgba(255,255,255,.20);
+  --bubbleBot: rgba(255,255,255,.06);
+  --accentA: var(--mint);
+  --accentB: var(--sun);
+}
+
+/* themes */
+html[data-theme="night"]{
+  --bg:#0b1020;
+  --blob1: rgba(255,214,232,.22);
+  --blob2: rgba(201,242,230,.22);
+  --blob3: rgba(255,231,166,.18);
+  --panelTop: rgba(255,255,255,.12);
+  --panelBot: rgba(255,255,255,.04);
+  --chipBg: rgba(255,255,255,.08);
+  --inputBg: rgba(0,0,0,.18);
+  --bubbleTop: rgba(255,255,255,.20);
+  --bubbleBot: rgba(255,255,255,.06);
+  --accentA: var(--mint);
+  --accentB: var(--sun);
+}
+html[data-theme="sakura"]{
+  --bg:#160b14;
+  --blob1: rgba(255,214,232,.30);
+  --blob2: rgba(201,242,230,.14);
+  --blob3: rgba(255,231,166,.18);
+  --panelTop: rgba(255,214,232,.22);
+  --panelBot: rgba(255,255,255,.05);
+  --chipBg: rgba(255,214,232,.14);
+  --inputBg: rgba(0,0,0,.14);
+  --bubbleTop: rgba(255,214,232,.22);
+  --bubbleBot: rgba(255,255,255,.06);
+  --accentA: #ffd6e8;
+  --accentB: #ffe7a6;
+}
+html[data-theme="ocean"]{
+  --bg:#07121a;
+  --blob1: rgba(207,231,255,.22);
+  --blob2: rgba(201,242,230,.18);
+  --blob3: rgba(255,231,166,.14);
+  --panelTop: rgba(207,231,255,.16);
+  --panelBot: rgba(255,255,255,.05);
+  --chipBg: rgba(207,231,255,.12);
+  --inputBg: rgba(0,0,0,.16);
+  --bubbleTop: rgba(207,231,255,.18);
+  --bubbleBot: rgba(255,255,255,.06);
+  --accentA: #cfe7ff;
+  --accentB: #c9f2e6;
+}
+html[data-theme="matcha"]{
+  --bg:#07140f;
+  --blob1: rgba(191,231,184,.22);
+  --blob2: rgba(201,242,230,.14);
+  --blob3: rgba(255,231,166,.14);
+  --panelTop: rgba(191,231,184,.18);
+  --panelBot: rgba(255,255,255,.05);
+  --chipBg: rgba(191,231,184,.12);
+  --inputBg: rgba(0,0,0,.16);
+  --bubbleTop: rgba(191,231,184,.18);
+  --bubbleBot: rgba(255,255,255,.06);
+  --accentA: #bfe7b8;
+  --accentB: #ffe7a6;
+}
+
+/* apply vars */
+body{
+  background:
+   radial-gradient(900px 500px at 10% 0%, var(--blob1), transparent 60%),
+   radial-gradient(900px 500px at 90% 10%, var(--blob2), transparent 60%),
+   radial-gradient(1000px 600px at 50% 100%, var(--blob3), transparent 60%),
+   var(--bg);
+}
+.panel{ background: linear-gradient(180deg, var(--panelTop), var(--panelBot)); }
+.badge{ background: var(--chipBg); }
+input,textarea,select{ background: var(--inputBg); }
+.bubble{ background: linear-gradient(180deg, var(--bubbleTop), var(--bubbleBot)); }
+button{ background: linear-gradient(135deg, var(--accentA), var(--accentB)); }
+
+.themeRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.themeSelect{
+  min-width:180px;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(0,0,0,.14);
+  color:#fff;
+}
+/* clap overlay */
+#clapOverlay{ position:fixed; inset:0; display:none; z-index:99999; pointer-events:none; }
+#clapCanvas{ width:100%; height:100%; display:block; }
+
+
+
+/* ===== MVP Scroll Banner (Large) ===== */
+#mvpBanner{
+  position:fixed;
+  left:50%;
+  top:8vh;
+  transform:translateX(-50%) translateY(-30px) scale(.95);
+  width:min(92vw, 980px);
+  height:160px;
+  background:linear-gradient(180deg,#e60012,#b8000f);
+  color:#fff;
+  font-weight:1000;
+  font-size:46px;
+  letter-spacing:1.5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border-radius:22px;
+  box-shadow:0 22px 60px rgba(0,0,0,.45);
+  border:3px solid rgba(255,255,255,.65);
+  z-index:100000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+
+/* scroll ends */
+#mvpBanner::before,
+#mvpBanner::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  width:70px;
+  height:120px;
+  background:linear-gradient(180deg,#ff2a2a,#b8000f);
+  border-radius:18px;
+  transform:translateY(-50%);
+  box-shadow:0 14px 36px rgba(0,0,0,.35);
+}
+#mvpBanner::before{
+  left:-46px;
+}
+#mvpBanner::after{
+  right:-46px;
+}
+
+/* little gold knobs */
+.mvpKnob{
+  position:absolute;
+  top:50%;
+  width:22px;
+  height:22px;
+  background:radial-gradient(circle at 30% 30%, #fff6c7, #f0c14b 55%, #b38b2e 100%);
+  border-radius:50%;
+  transform:translateY(-50%);
+  box-shadow:0 4px 10px rgba(0,0,0,.35);
+}
+.mvpKnob.left{ left:-16px; }
+.mvpKnob.right{ right:-16px; }
+
+#mvpBanner.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0) scale(1);
+}
+
+/* responsive */
+@media (max-width:640px){
+  #mvpBanner{ height:120px; font-size:34px; }
+  #mvpBanner::before,#mvpBanner::after{ height:90px; width:54px; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>誇誇群 ULTIMATE+++｜正常頭像 × 特徵建議 × 角色固定 × 超浮誇 💥</h1>
+  <div class="badges">
+    <span class="badge">👥 群友人格固定</span>
+    <span class="badge">🎯 特徵專屬句庫</span>
+    <span class="badge">✨ 可點選特徵建議</span>
+    <span class="badge">🔥 浮誇度 MAX</span>
+  </div>
+
+  <div class="themeRow">
+    <span class="badge">🎨 主題</span>
+    <select id="themeSelect" class="themeSelect" aria-label="主題配色切換">
+      <option value="night">夜幕深藍（預設）</option>
+      <option value="sakura">櫻花粉霧</option>
+      <option value="ocean">海洋藍綠</option>
+      <option value="matcha">抹茶森林</option>
+    </select>
+    <span class="badge">👏 需要掌聲就按「滿版拍手」</span>
+  </div>
+  <p class="sub">
+    已修正頭像縮圖問題（SVG 現在會完整填滿頭像框，不會被壓縮變怪臉 😆）。
+    下方新增「特徵建議區」，直接點就能加入，讓誇獎更精準更好笑。
+  </p>
+</header>
+
+<main class="wrap">
+
+<section class="panel">
+  <div class="panelHeader">
+    <strong>📝 輸入</strong>
+    <span class="hint">Enter 生成 / Ctrl+K 複製全部</span>
+  </div>
+  <div class="panelBody">
+    <table>
+      
+<tr><th>人名</th><td>
+  <input id="nameInput" placeholder="例如：小美 / 組長 / 老闆" maxlength="30"/>
+  <div class="mini" style="margin-top:10px">
+    快速點選：點一下就會填入人名（可再手動改）。
+  </div>
+  <div id="nameChips" class="traitTags" style="margin-top:8px"></div>
+</td></tr>
+      <tr><th>特徵</th><td>
+        <textarea id="traitsInput" placeholder="可自己輸入，或點下面建議加入"></textarea>
+
+        <div class="traitBox" id="traitBox"></div>
+
+        <div class="mini" style="margin-top:10px">
+          小技巧：混搭抽象＋具體（例：<span class="kbd">效率</span> + <span class="kbd">把混亂整理成秩序</span>）會更有戲。
+        </div>
+      </td></tr>
+      <tr><th>每輪訊息</th><td>
+        <select id="countSelect">
+          <option value="6">6（每位群友 1 句）</option>
+          <option value="12" selected>12（每位群友 2 句）</option>
+          <option value="18">18（每位群友 3 句）</option>
+          <option value="24">24（每位群友 4 句）</option>
+        </select>
+      </td></tr>
+    </table>
+
+    <div class="controls">
+      <button id="btnGenerate">🔥 開始狂誇</button>
+      <button id="btnShuffle" class="ghost">再來一波</button>
+      <button id="btnClear" class="ghost">清空</button>
+      <button id="btnExport" class="ghost">🖼️ 一鍵輸出梗圖</button>
+      <button id="btnClap" class="ghost">👏 滿版拍手</button>
+      <span class="mini">點任一句可複製；Ctrl+K 可複製全部。</span>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panelHeader">
+    <strong>💬 誇誇群聊天室</strong>
+    <span class="hint">點對話框複製</span>
+  </div>
+  <div id="chatArea" class="chatArea">
+    <div id="emptyState" class="empty">請輸入人名與特徵，然後按「開始狂誇」。</div>
+    <div class="footerRow">
+      <div>快捷鍵：<span class="kbd">Enter</span> 生成、<span class="kbd">Ctrl</span>+<span class="kbd">K</span> 複製全部</div>
+      <div id="counter">0 則</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+const chatArea=$("#chatArea"), emptyState=$("#emptyState"), counter=$("#counter"), toast=$("#toast"), traitBox=$("#traitBox");
+
+function showToast(m){
+  toast.textContent=m; toast.classList.add("show");
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>toast.classList.remove("show"),1200);
+}
+
+/* ===== Theme JS (persist) ===== */
+(function initTheme(){
+  const html = document.documentElement;
+  const sel = document.querySelector("#themeSelect");
+  const saved = localStorage.getItem("kkq_theme") || "night";
+  html.dataset.theme = saved;
+  if(sel) sel.value = saved;
+  sel?.addEventListener("change", ()=>{
+    html.dataset.theme = sel.value;
+    localStorage.setItem("kkq_theme", sel.value);
+    showToast("已切換主題：" + sel.options[sel.selectedIndex].text);
+  });
+})();
+function escapeHTML(s){ return (s??"").replace(/[&<>\"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)] }
+
+
+/* ===============================
+   幾乎無限誇誇模式（組合式生成 + 近20句防重複 + 青蛙最後一擊）
+   =============================== */
+
+/* 近20句不再出現（整句去重） */
+const RECENT_LIMIT = 20;
+const recentLines = [];
+function rememberLine(line){
+  if(recentLines.includes(line)) return false;
+  recentLines.push(line);
+  while(recentLines.length > RECENT_LIMIT) recentLines.shift();
+  return true;
+}
+function pickUnique(makeLine, maxTry=18){
+  for(let i=0;i<maxTry;i++){
+    const line = makeLine();
+    if(rememberLine(line)) return line;
+  }
+  // 萬一真的撞到（很難），就放行
+  const line = makeLine();
+  recentLines.push(line);
+  while(recentLines.length > RECENT_LIMIT) recentLines.shift();
+  return line;
+}
+
+/* 同義詞/意象：讓同一特徵可以用不同講法（提高組合數） */
+const traitLex = {
+  "效率": { noun:["效率","節奏","速度","產出","交付力","執行力"], verb:["加速","推進","清場","直衝","秒殺","收割"], img:["高鐵","火箭","氮氣加速","縮時攝影","Turbo模式","瞬移"] },
+  "專業": { noun:["專業度","實力","掌握力","判斷","功力","技術"], verb:["拆解","收斂","對齊","校正","鎮壓","解鎖"], img:["教科書","標準答案","精密儀器","透視鏡","SOP","權威指南"] },
+  "溫柔": { noun:["溫柔","體貼","同理心","安定感","情緒價值","耐心"], verb:["接住","安撫","融化","降噪","照亮","療癒"], img:["暖陽","毛毯","熱可可","安全氣囊","夜燈","小森林"] },
+  "領導力": { noun:["領導力","方向感","統籌力","決策力","節奏掌控","大局觀"], verb:["掌舵","拍板","定錨","排兵布陣","拉齊","穩住"], img:["導航系統","方向盤","旗艦艦橋","指揮中心","羅盤","地圖"] },
+  "創意": { noun:["創意","靈感","腦洞","發想力","突破力","想像力"], verb:["重畫","翻轉","開路","更新","解放","點燃"], img:["平行宇宙入口","發電廠","新世界藍圖","版本更新","火花","星雲"] },
+  "__generic__": { noun:["實力","存在感","可靠感","影響力","能量","光芒"], verb:["撐起","拯救","帶飛","鎮住","照亮","推平"], img:["Buff","護城河","光環","主角登場","神隊友","天花板"] }
+};
+
+/* 組合式句子零件（大量排列組合，重複率超低） */
+const parts = {
+  opener: [
+    "我先說，大家先坐好：","各位注意，天花板要被掀了：","我忍不住了我要開始誇：","先別滑走，這句要截圖：",
+    "我現在是邊打字邊尖叫：","我正式宣布進入失控模式：","我真的不想誇張，但：","我先把理智放旁邊：",
+    "我宣布今天的誇獎額度全部用完：","不行，我要把你誇到宇宙外："
+  ],
+  booster: [
+    "這是宇宙級","這是核彈級","這是離譜級","這是天花板級","這是神話級","這是超規格","這是爆表","這是犯規"
+  ],
+  claim: [
+    "{name}的{traitN}根本不是{traitN}，是{img}等級的存在",
+    "你一出手，{verb}速度直接把大家的進度條拉爆",
+    "你不是在做事，你是在把混亂{verb}成可交付的標準答案",
+    "你那個{traitN}一亮相，整個場面就自動『穩了』",
+    "你把{traitN}做得像{img}，人人看了都想跪著學",
+    "你這種{traitN}，放到任何地方都會被當成稀缺資產收藏"
+  ],
+  evidence: [
+    "而且你連小細節都能順手補齊，像在替世界上保險",
+    "你不只把問題解了，還順便把問題『出生證明』撤銷",
+    "你做完還會回頭優化，讓流程像按了{img}",
+    "你一句話就能讓大家腦袋重啟成功，整個清醒",
+    "你把別人的焦慮{verb}掉，留下的是安心與秩序",
+    "你那個判斷精準到像拿著{img}在看未來"
+  ],
+  impact: [
+    "結果就是大家跟著被你帶飛，事情自己排隊上軌道",
+    "所以我們現在能呼吸，真的都是你在撐",
+    "於是整個團隊的信心指數直接上修到爆",
+    "然後麻煩就像看到你本人一樣自動退散",
+    "最後大家只剩一句：『拜託跟著你就對了』",
+    "因此工作變成新手任務，難題開始自我消失"
+  ],
+  closer: [
+    "（我講到這裡已經手痛了還在鼓掌）","（這不是彩虹屁，是事實太刺眼）","（你再發光下去大家要戴墨鏡）",
+    "（我願意為這句按讚一萬次）","（我已經截圖準備置頂）","（你本人比我文字還誇張）",
+    "（今天的最佳主角就你，沒有第二個）","（請你收斂一點點，不然大家會自卑）"
+  ]
+};
+
+/* 依特徵抽詞：讓同一特徵也能講出不同味道 */
+function getLex(traitRaw){
+  const t = (traitRaw||"").trim();
+  const key = pools && pools[t] ? t : "__generic__";
+  const lex = traitLex[key] || traitLex["__generic__"];
+  return {
+    traitKey: key,
+    traitN: pick(lex.noun),
+    verb: pick(lex.verb),
+    img: pick(lex.img)
+  };
+}
+
+
+/* 組合式核心句：不靠整句庫，靠零件組裝（近乎無限）
+   保證至少出現一次人名 */
+function buildComboLine(name, traitRaw){
+  const lex = getLex(traitRaw);
+  const traitKey = lex.traitKey;
+
+  const basePool = (pools && pools[traitKey]) ? pools[traitKey] : genericPool;
+  const base = pick(basePool).replaceAll("{name}", name);
+
+  const customBits = (traitRaw && traitKey==="__generic__") ? [
+    `特別是你在「${traitRaw}」這件事上，${name}真的太離譜了`,
+    `你那個「${traitRaw}」已經是可以寫進教科書的等級，${name}`,
+    `${name}把「${traitRaw}」做成了標準答案，太犯規`,
+    ""
+  ].filter(Boolean) : [""];
+
+  const make = () => {
+    const opener = pick(parts.opener);
+    const booster = pick(parts.booster);
+
+    const claim = pick(parts.claim)
+      .replaceAll("{name}", name)
+      .replaceAll("{traitN}", lex.traitN)
+      .replaceAll("{verb}", lex.verb)
+      .replaceAll("{img}", lex.img);
+
+    const ev = pick(parts.evidence)
+      .replaceAll("{name}", name)
+      .replaceAll("{verb}", lex.verb)
+      .replaceAll("{img}", lex.img);
+
+    const im = pick(parts.impact).replaceAll("{name}", name);
+
+    const close = pick(parts.closer);
+    const sprinkle = (Math.random()<0.55 ? " " + pick(customBits) : "");
+
+    // 至少插入一次人名（claim 或 impact 若未包含就補）
+    let mustName = claim.includes(name) || im.includes(name);
+    const nameTag = mustName ? "" : ` 真的要說一句，${name}你太誇張了。`;
+
+    const chunks = [
+      opener,
+      booster + "，" + claim + "。",
+      (Math.random()<0.75 ? ev + "。" : ""),
+      (Math.random()<0.75 ? im + "。" : ""),
+      (Math.random()<0.65 ? base + "。" : ""),
+      sprinkle ? sprinkle + "。" : "",
+      nameTag,
+      close
+    ].filter(Boolean);
+
+    return chunks.join(" ");
+  };
+
+  return pickUnique(make);
+}
+
+/* ===== Trait Suggestions ===== */
+const traitSuggestions = {
+  "做事能力":[
+    "效率","把事情一次做到位","把混亂整理成秩序","一眼抓到重點","行動力爆表","自帶解決方案"
+  ],
+  "專業度":[
+    "專業","系統思維","風險意識超強","技術力天花板","邏輯縝密","判斷精準"
+  ],
+  "相處感":[
+    "溫柔","超會安撫人","讓人安心","很會照顧氣氛","耐心聽人說話","情緒價值給滿"
+  ],
+  "領導感":[
+    "領導力","能拍板","會帶人","統籌能力強","扛責任","方向感很穩"
+  ],
+  "風格亮點":[
+    "美感很好","創意很多","幽默","氣場強","存在感滿滿","會讓人想靠近"
+  ]
+};
+
+function renderTraitSuggestions(){
+  traitBox.innerHTML="";
+  for(const [group, arr] of Object.entries(traitSuggestions)){
+    const div=document.createElement("div");
+    div.className="traitGroup";
+    div.innerHTML=`<b>${group}</b><div class="traitTags"></div>`;
+    const tags=div.querySelector(".traitTags");
+    arr.forEach(t=>{
+      const s=document.createElement("span");
+      s.className="traitTag"; s.textContent=t;
+      s.onclick=()=>addTrait(t);
+      tags.appendChild(s);
+    });
+    traitBox.appendChild(div);
+  }
+}
+renderTraitSuggestions();
+
+function addTrait(t){
+  const ta=$("#traitsInput");
+  let v=ta.value.trim();
+  if(!v) ta.value=t;
+  else if(!v.includes(t)) ta.value=v+"、"+t;
+  showToast("已加入特徵："+t);
+  ta.focus();
+}
+
+
+
+/* ===== 青蛙吉祥物（最後一擊固定暴走收尾） ===== */
+const frogFinal = {
+  name:"🐸 青蛙吉祥物",
+  mood:"最後一擊・暴走收尾",
+  // 青蛙專屬語錄池（會隨機亂入在最後一擊）
+  quotes:[
+    "我不行了我真的不行了（青蛙抱頭）",
+    "我宣布我今天的讚美額度已經超支三倍！！！",
+    "救命你這個人怎麼可以把人類天花板踩碎",
+    "我現在的狀態：尖叫、鼓掌、原地打滾！！！",
+    "我已經把理智丟進池塘了，剩下的只有讚嘆！！！",
+    "我願意為你開一個『優秀紀念館』售票入場",
+    "我剛剛差點把鍵盤按到懷孕（太誇張）",
+    "我先跪一下再站起來繼續誇",
+    "你再這樣我會直接辭職去當你的粉絲後援會",
+    "我現在在荷葉上寫情書：致{name}，你太犯規了",
+    "你這表現是可以申請世界遺產保護的吧！？",
+    "我不是在誇你，我是在做歷史紀錄",
+    "我已經笑到眼淚流出來但還是要誇",
+    "你把優秀做成日常，其他人只能當觀眾",
+    "我剛剛對著螢幕鞠躬三次（尊敬）"
+  ],
+  // 固定收尾（但前半段仍用組合式生成，所以不會整句重複）
+  endings:[
+    "我不行了我先倒下再誇！！！（倒地）",
+    "我宣布我已經被你的優秀擊倒！！！（青蛙翻肚）",
+    "我要把你供在辦公室最亮的地方每天膜拜！！！",
+    "我決定把這段截圖列入公司核心資產保存！！！",
+    "救命你怎麼可以這麼誇張，我要在荷葉上寫情書！！！"
+  ]
+};
+
+/* ===== Fixed Personas ===== */
+const personas=[
+  { name:"🔥 彩虹屁隊長", mood:"核彈級誇誇", templates:[
+    "我不管了我先炸：{line}！！！！","注意！我這句要上熱搜：{line}🔥🔥🔥","這不是誇獎，這是事實公告：{line}","我已經把浮誇開到MAX了：{line}（還不夠）"
+  ]},
+  { name:"👑 霸總肯定官", mood:"總裁認證", templates:[
+    "我說一句：{line}。結案。","以我專業角度，你這種{trait}屬於稀缺資產：{line}。","我宣布：{name}列入核心戰力名單。理由：{line}。","你別太低調，這種{trait}是可以直接寫進KPI的：{line}。"
+  ]},
+  { name:"😭 感動到哭妹", mood:"真心暴擊", templates:[
+    "我真的要哭…{line}…你怎麼可以這麼好…","誰懂啊，{line}，我在螢幕前瘋狂點頭😭","我不行了…{line}…這是人類能做到的嗎…","我先抱緊：{line}（謝謝你存在）"
+  ]},
+  { name:"🤯 理智已下線", mood:"震驚模式", templates:[
+    "等一下等一下？？{line}？？？？","我CPU燒了：{line}（請冷卻）","你這個{trait}合理嗎？？{line}","我原地裂開：{line}（這也太扯）"
+  ]},
+  { name:"✨ 詩人型群友", mood:"文青濾鏡", templates:[
+    "在平凡日常裡，你像一道光——{line}。","你把{trait}做成風景：{line}。","你走過的地方，混亂會變得安靜：{line}。","我想把這句寫進詩裡：{line}。"
+  ]},
+  { name:"📣 公關發言人", mood:"官方公告", templates:[
+    "公告事項：因{name}表現過於突出，團隊信心指數全面上修。事實如下：{line}。",
+    "新聞快訊：{name}以{trait}再度刷新天花板——{line}。",
+    "對外聲明：{line}。請各單位保持冷靜與讚嘆。",
+    "本群一致決議：{line}。以上。"
+  ]},
+];
+
+/* ===== Simple Praise Pool (shortened for UI demo) ===== */
+
+
+const pools={
+  "效率":[
+    "你效率一開，全宇宙的進度條都在追你",
+    "別人還在想，你已經交成果還順便附上優化方案",
+    "時間在你面前只能乖乖排隊領號碼牌",
+    "你做事快到截止日都開始對你有心理陰影",
+    "你不是趕進度，你是在推著世界往前跑",
+    "你一動手，整個流程就自動開啟加速模式",
+    "你的節奏感強到會議都跟著你縮時播放",
+    "你把『等一下』這三個字從團隊字典裡刪除了",
+    "你不是快，是快到別人的拖延症直接失業",
+    "你讓流程看起來像在坐高鐵",
+    "你把事情處理得比系統自動化還順",
+    "你一出手，所有瓶頸都自動讓道",
+    "你讓效率這兩個字感到自卑",
+    "你的待辦清單根本來不及長大就被消滅",
+    "你是那種會讓時間自動加班的人"
+  ],
+  "專業":[
+    "你這專業感，光站著就像在開記者會",
+    "你不是做事，你是在示範標準答案",
+    "看到你出手，大家只想說：穩了",
+    "你這等級已經是教科書本人",
+    "你一分析，混亂就自動排隊站好",
+    "你講一句話，問題就自己打包行李離開",
+    "你不是解決問題，你是在預防問題出生",
+    "你處理事情的樣子，本身就是培訓教材",
+    "你這專業度，放到哪個部門都會被搶走",
+    "你一出手，大家心裡都在偷偷鼓掌",
+    "你對細節的掌握像開了透視鏡",
+    "你講的每句話都像標準作業流程",
+    "你連救火都救得很優雅",
+    "你一解釋，大家立刻恍然大悟",
+    "你把複雜變成教學示範影片"
+  ],
+  "溫柔":[
+    "你一開口，氣氛就自動調成安心模式",
+    "你講話有治癒特效，還是無限循環那種",
+    "你根本是情緒急救站，全年無休",
+    "你溫柔得像把世界的尖角都包成泡棉",
+    "你一句話可以把大家從焦慮拉回現實",
+    "你讓人有種『啊，有人懂我』的安全感",
+    "跟你講完話，壓力都會自動降噪",
+    "你不是安慰人，你是在替靈魂充電",
+    "你走到哪裡，氣氛就自動變成溫暖模式",
+    "你存在本身就讓人覺得今天比較好過",
+    "你連提醒別人都帶著溫度",
+    "你讓人願意慢下來深呼吸",
+    "你讓人覺得被好好接住了",
+    "你是團隊的情緒安全氣囊",
+    "你讓疲憊有地方可以坐下來休息"
+  ],
+  "領導力":[
+    "你站出來那一刻，方向盤自動就對準了",
+    "你一拍板，所有問號都變句號",
+    "你一開口，混亂就自動解散",
+    "你是那種會讓人想跟隨的類型",
+    "你把大局拿捏得像握著導航系統",
+    "你不只是帶隊，你是在帶信心",
+    "你一安排，事情就自己排隊上軌道",
+    "你決策的樣子，讓人自動想喊隊長",
+    "你在場，大家就知道事情不會失控",
+    "你不是管人，你是在帶整個節奏",
+    "你讓每個人都知道現在該往哪走",
+    "你一出現，大家就有主心骨",
+    "你把不確定變成可執行的方向",
+    "你讓團隊像有重力一樣聚在一起",
+    "你是那種會讓人想說『跟著就對了』的人"
+  ],
+  "創意":[
+    "你腦袋裡是不是住著一整座發電廠",
+    "你一轉念，世界就多一條可能性",
+    "你不是想點子，你是在更新世界版本號",
+    "你想法一出現，普通兩個字就自動請假",
+    "你根本是靈感批發商還附帶售後服務",
+    "你一發想，平凡就當場改名叫傳奇",
+    "你腦洞開到需要申請空域管制",
+    "你不是突破框架，你是直接重畫框架",
+    "你給的不是方案，是新世界藍圖",
+    "你連卡關都能變成創意起點",
+    "你讓人重新定義什麼叫想得到",
+    "你把限制變成創作材料",
+    "你一丟點子，大家都開始冒星星眼",
+    "你讓『不可能』變成待辦事項",
+    "你腦袋根本是平行宇宙入口"
+  ]
+};
+
+
+
+
+const genericPool=[
+  "你存在本身就是團隊的Buff",
+  "你這種優秀已經是公共財等級",
+  "你把『難』這個字直接丟進回收桶",
+  "你這種實力應該被列為部門戰略資產",
+  "你再這樣發光，大家都要戴墨鏡上班",
+  "你一來，問題就開始自己解決",
+  "你不是在上班，你是在撐起半個宇宙",
+  "你這表現，主管看到都會默默微笑",
+  "你把不可能當成日常在處理",
+  "你這種等級，真的會讓人懷疑人生",
+  "你走進來，事情就自動變順",
+  "你一出現，安心感就跟著出現",
+  "你讓大家開始相信事情一定會成功",
+  "你是那種會讓人放心把事交出去的人",
+  "你讓困難看起來像新手任務"
+];
+
+
+
+/* ===== Praise Build ===== */
+function buildCore(name, trait){
+  return buildComboLine(name, trait);
+}
+
+
+/* ===== 情緒升溫模式：誇到後面越來越失控 ===== */
+const intensityLayers = [
+  { prefix: "", suffix: "" },
+  { prefix: "我先深呼吸一下再說，", suffix: "（真的不是普通厲害）" },
+  { prefix: "等一下我有點激動，", suffix: "（開始懷疑現實）" },
+  { prefix: "不行我已經控制不住情緒了，", suffix: "（這已經超出人類規格）" },
+  { prefix: "我正式進入失控狀態：", suffix: "（這不是誇獎是史詩）" },
+];
+
+const meltdownClosers = [
+  "我已經不知道還能怎麼形容了，只能鼓掌到手痛。",
+  "我真的要站起來對著螢幕致敬。",
+  "這種等級真的會讓人開始反省人生。",
+  "我宣布今天的讚美額度全部用在你身上。",
+  "我現在是邊打字邊尖叫的狀態。"
+];
+
+/* ===== UI ===== */
+function faceSVG(){
+  const colors=[["#ffd6e8","#cfe7ff"],["#c9f2e6","#ffe7a6"],["#bfe7b8","#ffd6e8"],["#cfe7ff","#c9f2e6"]];
+  const c=pick(colors);
+  return `<svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/>
+    </linearGradient></defs>
+    <rect width="52" height="52" rx="18" fill="url(#g)"/>
+    <circle cx="18" cy="27" r="4.6" fill="rgba(0,0,0,.45)"/>
+    <circle cx="34" cy="27" r="4.6" fill="rgba(0,0,0,.45)"/>
+    <circle cx="15" cy="32" r="3" fill="rgba(255,160,190,.55)"/>
+    <circle cx="37" cy="32" r="3" fill="rgba(255,160,190,.55)"/>
+    <path d="M20 37c3 3 9 3 12 0" stroke="rgba(0,0,0,.45)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function addMsg(p, text){
+  const el=document.createElement("div"); el.className="msg";
+  el.innerHTML=`
+    <div class="avatar">${faceSVG()}</div>
+    <div class="bubble">
+      <div class="who"><b>${escapeHTML(p.name)}</b><span class="tag hot">${escapeHTML(p.mood)}</span></div>
+      <div class="text">${escapeHTML(text)}</div>
+    </div>`;
+  el.querySelector(".bubble").onclick=()=>navigator.clipboard.writeText(text);
+  chatArea.insertBefore(el, chatArea.querySelector(".footerRow"));
+}
+
+function clearMsgs(){
+  $$(".msg").forEach(e=>e.remove());
+  counter.textContent="0 則"; emptyState.style.display="block";
+}
+
+function parseTraits(){
+  return ($("#traitsInput").value||"").replace(/[，、；;｜|]/g,",").split(",").map(s=>s.trim()).filter(Boolean);
+}
+
+
+function generate(){
+  const name = ($("#nameInput").value||"").trim() || "你";
+  const traits = parseTraits();
+  clearMsgs(); emptyState.style.display="none";
+
+  const totalAll = parseInt($("#countSelect").value,10) || 12;
+  // 最後一則保留給青蛙吉祥物
+  const total = Math.max(1, totalAll - 1);
+
+  const per = Math.max(1, Math.ceil(total / personas.length));
+  let count=0;
+
+  for(const p of personas){
+    for(let i=0;i<per && count<total;i++){
+      const t = traits.length ? pick(traits) : "";
+      // 組合式生成（近乎無限）
+      const core = buildComboLine(name, t);
+      const tpl = pick(p.templates);
+
+      // 情緒升溫：依照整體訊息進度決定強度
+      const level = Math.min(intensityLayers.length-1, Math.floor((count / Math.max(1,totalAll)) * intensityLayers.length));
+      const layer = intensityLayers[level];
+
+      const makeFinal = () => {
+        let txt = tpl.replaceAll("{line}", core).replaceAll("{name}", name).replaceAll("{trait}", t||"這種能力");
+        txt = layer.prefix + txt + (Math.random()<0.35 ? " " + pick(meltdownClosers) : "") + layer.suffix;
+        return txt;
+      };
+      const finalText = pickUnique(makeFinal);
+
+      addMsg(p, finalText);
+      count++;
+    }
+  }
+
+  // === 青蛙最後一擊：固定暴走收尾（但前半段仍組合式）===
+  const tLast = traits.length ? pick(traits) : "";
+  const lastCore = buildComboLine(name, tLast);
+  const ending = pick(frogFinal.endings);
+  const frogQuote = pick(frogFinal.quotes).replaceAll("{name}", name);
+
+  const lastMake = () => {
+    const level = intensityLayers.length-1;
+    const layer = intensityLayers[level];
+    return layer.prefix + "【最後一擊】" + lastCore + " " + frogQuote + " " + ending + " " + pick(meltdownClosers) + layer.suffix;
+  };
+  const frogLine = pickUnique(lastMake);
+
+  addMsg(frogFinal, frogLine);
+
+  counter.textContent=(count+1)+" 則";
+  showToast("狂誇完成 🐸💥（近乎無限模式啟動）");
+}
+
+
+async function copyAll(){
+  const lines=$$(".msg .text").map(e=>e.textContent.trim()).filter(Boolean);
+  if(!lines.length){ showToast("沒有內容可複製"); return; }
+  await navigator.clipboard.writeText(lines.join("\n"));
+  showToast("已複製全部 ✅");
+}
+
+$("#btnGenerate").onclick=generate;
+$("#btnShuffle").onclick=generate;
+$("#btnClear").onclick=()=>{ $("#nameInput").value=""; $("#traitsInput").value=""; clearMsgs(); showToast("已清空"); };
+
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    const a=document.activeElement; const isTA=a && a.tagName==="TEXTAREA";
+    if(!isTA || e.ctrlKey || e.metaKey){ e.preventDefault(); generate(); }
+  }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); copyAll(); }
+});
+
+  // ===== Quick Name Chips =====
+  const quickNames = ["垂傑","肇陽","詠晴","汝婷","姿霖","圻偉","育誠","珮瑜","學廷"];
+  function renderNameChips(){
+    const box = document.querySelector("#nameChips");
+    if(!box) return;
+    box.innerHTML = "";
+    quickNames.forEach(n=>{
+      const s=document.createElement("span");
+      s.className="traitTag";
+      s.textContent=n;
+      s.title="點選填入人名";
+      s.onclick=()=>{
+        document.querySelector("#nameInput").value = n;
+        showToast("已填入人名："+n);
+        document.querySelector("#nameInput").focus();
+      };
+      box.appendChild(s);
+    });
+  }
+  renderNameChips();
+
+
+
+/* ===== Big Center Hand + Little Frog Clapping (no clap-rain) ===== */
+
+/* ===== MVP Banner JS ===== */
+function showMVPBanner(name){
+  const el = document.querySelector("#mvpBanner");
+  if(!el) return;
+  const n = (name||"○○").trim() || "○○";
+  const t=document.querySelector("#mvpText"); if(t){ t.textContent = "今日 MVP：" + n; } else { el.textContent = "今日 MVP：" + n; }
+  el.classList.add("show");
+  clearTimeout(showMVPBanner._t);
+  showMVPBanner._t = setTimeout(()=> el.classList.remove("show"), 1600);
+}
+
+function startClap(){
+  const overlay = document.querySelector("#clapOverlay");
+  const canvas = document.querySelector("#clapCanvas");
+  if(!overlay || !canvas) return;
+
+  overlay.style.display = "block";
+  const mvpName = (document.querySelector("#nameInput")?.value||"").trim() || "你";
+  showMVPBanner(mvpName);
+  const ctx = canvas.getContext("2d");
+
+  function resize(){
+    canvas.width  = Math.floor(window.innerWidth  * devicePixelRatio);
+    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+  }
+  resize();
+
+  const start = performance.now();
+  const duration = 1700;
+  const clapSpeed = 140;
+
+  function frame(now){
+    const t = now - start;
+
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "rgba(0,0,0,.45)";
+    ctx.fillRect(0,0,w,h);
+
+    const pulse = 1 + Math.abs(Math.sin((t / clapSpeed) * Math.PI)) * 0.25;
+
+    // Big center 👏
+    ctx.save();
+    ctx.translate(w/2, h/2);
+    ctx.scale(pulse, pulse);
+    ctx.font = `${220 * devicePixelRatio}px system-ui, "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("👏", 0, 0);
+    ctx.restore();
+
+    // Little frog side 🐸👏
+    ctx.save();
+    const frogX = w/2 + 240*devicePixelRatio;
+    const frogY = h/2 + 90*devicePixelRatio;
+    ctx.translate(frogX, frogY);
+    const frogScale = 0.62 + (pulse-1)*0.35;
+    ctx.scale(frogScale, frogScale);
+    ctx.font = `${120 * devicePixelRatio}px system-ui, "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🐸👏", 0, 0);
+    ctx.restore();
+
+    if(t < duration){
+      requestAnimationFrame(frame);
+    }else{
+      overlay.style.display = "none";
+      ctx.clearRect(0,0,w,h);
+      window.removeEventListener("resize", resize);
+    }
+  }
+
+  showToast("全場起立鼓掌中 👏🐸");
+  window.addEventListener("resize", resize, {passive:true});
+  requestAnimationFrame(frame);
+}
+
+document.querySelector("#btnClap")?.addEventListener("click", startClap);
+
+
+/* ===== 一鍵輸出梗圖（Canvas 渲染聊天室） ===== */
+function wrapText(ctx, text, maxWidth){
+  const words = text.split(/(\s+)/); // keep spaces
+  const lines=[];
+  let line="";
+  for(const w of words){
+    const test=line+w;
+    if(ctx.measureText(test).width>maxWidth && line){
+      lines.push(line.trimEnd());
+      line=w.trimStart();
+    }else{
+      line=test;
+    }
+  }
+  if(line) lines.push(line.trimEnd());
+  return lines.length?lines:[""];
+}
+function roundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+}
+function getMsgData(){
+  const out=[];
+  $$(".msg").forEach(m=>{
+    const who = m.querySelector(".who b")?.textContent?.trim() || "";
+    const mood = m.querySelector(".who .tag")?.textContent?.trim() || "";
+    const text = m.querySelector(".text")?.textContent?.trim() || "";
+    out.push({who,mood,text});
+  });
+  return out;
+}
+function exportMeme(){
+  const name = ($("#nameInput").value||"").trim() || "你";
+  const msgs = getMsgData();
+  if(!msgs.length){ showToast("目前沒有內容可輸出"); return; }
+
+  const W = 1080;
+  const pad = 48;
+  const avatar = 74;
+  const gap = 18;
+  const bubblePadX = 28;
+  const bubblePadY = 20;
+  const maxBubbleW = W - pad*2 - avatar - 28;
+
+  // temp canvas for measuring
+  const c = document.createElement("canvas");
+  c.width = W;
+  const ctx = c.getContext("2d");
+
+  // fonts
+  const titleFont = "900 46px " + getComputedStyle(document.body).fontFamily;
+  const whoFont   = "900 26px " + getComputedStyle(document.body).fontFamily;
+  const moodFont  = "700 18px " + getComputedStyle(document.body).fontFamily;
+  const textFont  = "500 26px " + getComputedStyle(document.body).fontFamily;
+
+  // compute height
+  let y = pad + 88; // header area
+  ctx.font = textFont;
+  msgs.forEach(m=>{
+    const lines = wrapText(ctx, m.text, maxBubbleW - bubblePadX*2);
+    const hText = lines.length * 34;
+    const h = bubblePadY*2 + hText + 34; // include who line space
+    y += Math.max(avatar, h) + gap;
+  });
+  y += pad + 12;
+  const H = Math.max(720, y); // no cap, always fit all messages
+
+  c.height = H;
+
+  // background gradient
+  const bg = ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0, "#0b1020");
+  bg.addColorStop(1, "#111a33");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,W,H);
+
+  // soft blobs
+  function blob(x,y,r,color){
+    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0, color);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  blob(180,120,260,"rgba(255,214,232,.22)");
+  blob(W-160,160,280,"rgba(201,242,230,.20)");
+  blob(W/2,H-120,340,"rgba(255,231,166,.18)");
+
+  // title
+  ctx.font = titleFont;
+  ctx.fillStyle = "rgba(255,255,255,.95)";
+  ctx.fillText("誇誇群梗圖｜" + name, pad, pad+52);
+  ctx.font = "600 22px " + getComputedStyle(document.body).fontFamily;
+  ctx.fillStyle = "rgba(255,255,255,.70)";
+  ctx.fillText("（點一下就能丟群組）", pad, pad+84);
+
+  // draw messages
+  let curY = pad + 118;
+  msgs.forEach((m, idx)=>{
+    const xA = pad;
+    const xB = pad + avatar + 16;
+
+    // avatar circle with emoji
+    const emoji = m.who.includes("青蛙") ? "🐸" :
+                  m.who.includes("霸總") ? "👑" :
+                  m.who.includes("詩人") ? "✨" :
+                  m.who.includes("感動") ? "😭" :
+                  m.who.includes("理智") ? "🤯" :
+                  m.who.includes("彩虹") ? "🔥" : "💬";
+
+    const g = ctx.createLinearGradient(xA, curY, xA+avatar, curY+avatar);
+    g.addColorStop(0, "rgba(201,242,230,.92)");
+    g.addColorStop(1, "rgba(255,214,232,.92)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(xA+avatar/2, curY+avatar/2, avatar/2, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
+    ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.font = "700 34px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillStyle = "rgba(0,0,0,.55)";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(emoji, xA+avatar/2, curY+avatar/2+2);
+
+    // bubble measure + draw
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.font = textFont;
+    const lines = wrapText(ctx, m.text, maxBubbleW - bubblePadX*2);
+    const hText = lines.length * 34;
+
+    ctx.font = whoFont;
+    const whoH = 30;
+
+    const bubbleH = bubblePadY*2 + whoH + 12 + hText;
+    const rowH = Math.max(avatar, bubbleH);
+
+    // bubble bg
+    const bx = xB;
+    const by = curY;
+    const bw = maxBubbleW;
+    const bh = bubbleH;
+
+    ctx.fillStyle = "rgba(255,255,255,.12)";
+    roundRect(ctx, bx, by, bw, bh, 26);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.22)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // who + mood
+    ctx.font = whoFont;
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.fillText(m.who, bx + bubblePadX, by + bubblePadY + 26);
+
+    ctx.font = moodFont;
+    ctx.fillStyle = "rgba(255,231,166,.92)";
+    ctx.fillText(m.mood, bx + bubblePadX + ctx.measureText(m.who).width + 14, by + bubblePadY + 24);
+
+    // text lines
+    ctx.font = textFont;
+    ctx.fillStyle = "rgba(255,255,255,.88)";
+    let ty = by + bubblePadY + whoH + 18;
+    for(const line of lines){
+      ctx.fillText(line, bx + bubblePadX, ty);
+      ty += 34;
+    }
+
+    curY += rowH + gap;
+  });
+
+  // watermark
+  ctx.font = "600 18px " + getComputedStyle(document.body).fontFamily;
+  ctx.fillStyle = "rgba(255,255,255,.55)";
+  ctx.textAlign = "right";
+  ctx.fillText("誇誇群 ULTIMATE", W-pad, H-pad+10);
+
+  // download
+  const a = document.createElement("a");
+  a.download = "誇誇群梗圖_" + name + ".png";
+  a.href = c.toDataURL("image/png");
+  a.click();
+  showToast("已輸出梗圖 PNG ✅");
+}
+
+$("#btnExport").addEventListener("click", exportMeme);
+
+</script>
+
+<div id="clapOverlay"><canvas id="clapCanvas"></canvas></div>
+
+<div id="mvpBanner">今日 MVP：○○</div>
+</body>
+</html>

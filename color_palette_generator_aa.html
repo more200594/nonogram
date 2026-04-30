@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>品牌配色器（含 AA 對比檢查）</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --line: #e2e8f0;
+      --text: #0f172a;
+      --muted: #475569;
+      --ok-bg: #ecfdf5;
+      --ok-text: #166534;
+      --bad-bg: #fef2f2;
+      --bad-text: #991b1b;
+      --warn-bg: #fffbeb;
+      --warn-text: #92400e;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(15, 23, 42, 0.05);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card + .card { margin-top: 20px; }
+    .card-header {
+      padding: 22px 22px 10px;
+    }
+    .card-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .card-subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .card-body {
+      padding: 0 22px 22px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    input[type="color"] {
+      width: 68px;
+      height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 6px;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0 16px;
+      font-size: 16px;
+      color: var(--text);
+      background: #fff;
+    }
+    button {
+      height: 46px;
+      border: 0;
+      border-radius: 14px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.06s ease, opacity 0.2s ease;
+    }
+    button:hover { opacity: 0.95; }
+    button:active { transform: translateY(1px); }
+    .btn-primary { background: #0f172a; color: white; }
+    .btn-secondary { background: white; color: var(--text); border: 1px solid var(--line); }
+    .btn-copy { background: white; color: var(--text); border: 1px solid var(--line); }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 22px 10px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      padding: 0 22px 22px;
+    }
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      padding: 0 22px 22px;
+    }
+    .swatch {
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 18px;
+      overflow: hidden;
+      background: white;
+    }
+    .swatch-preview {
+      height: 118px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-end;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .swatch-small .swatch-preview { height: 88px; }
+    .swatch-meta {
+      padding: 10px 12px 12px;
+    }
+    .swatch-label {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .swatch-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-top: 8px;
+    }
+    .pass { background: var(--ok-bg); color: var(--ok-text); }
+    .fail { background: var(--bad-bg); color: var(--bad-text); }
+    .warn { background: var(--warn-bg); color: var(--warn-text); }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .check-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .check-info {
+      min-width: 220px;
+      flex: 1;
+    }
+    .check-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .check-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .check-ratio {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .mini-pair {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 160px;
+    }
+    .mini-a, .mini-b {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      min-width: 80px;
+    }
+    .code-wrap {
+      padding: 0 22px 22px;
+    }
+    pre {
+      margin: 0;
+      background: #020617;
+      color: #e2e8f0;
+      border-radius: 18px;
+      padding: 18px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .tips {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+      margin-top: 18px;
+    }
+    .tips h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+    .tips p {
+      margin: 6px 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+      .swatch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      .wrap { padding: 16px; }
+      .swatch-grid, .related-grid { grid-template-columns: 1fr; }
+      .section-head { flex-direction: column; align-items: flex-start; }
+      .card-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="grid">
+      <aside>
+        <section class="card">
+          <div class="card-header">
+            <h1 class="card-title">品牌配色器</h1>
+            <p class="card-subtitle">選擇主色後，自動產生色階、關聯配色，並加入 WCAG AA 對比檢查，方便你直接拿去做網站或介面設計。</p>
+          </div>
+          <div class="card-body">
+            <label for="hexInput">主色</label>
+            <div class="row">
+              <input type="color" id="colorPicker" value="#0f766e" />
+              <input type="text" id="hexInput" value="#0f766e" placeholder="#0f766e" />
+            </div>
+            <div class="row" style="margin-top: 14px;">
+              <button class="btn-primary" id="applyBtn">套用色碼</button>
+              <button class="btn-secondary" id="randomBtn">隨機主色</button>
+            </div>
+
+            <div class="tips">
+              <h3>AA 檢查規則</h3>
+              <p><strong>一般文字：</strong>至少 4.5:1 才算 AA。</p>
+              <p><strong>大字：</strong>至少 3:1 可達 AA（18pt 以上或粗體 14pt 以上）。</p>
+              <p>此工具會優先幫你檢查最常見的白字／黑字搭配與主要衍生色的可用性。</p>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main>
+        <section class="card">
+          <div class="section-head">
+            <h2>主色階</h2>
+          </div>
+          <div class="swatch-grid" id="scaleGrid"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>衍生配色</h2>
+          </div>
+          <div class="related-grid" id="relatedGrid"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>AA 對比檢查</h2>
+          </div>
+          <div class="card-body">
+            <div class="list" id="contrastList"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>CSS 變數</h2>
+            <button class="btn-copy" id="copyBtn">複製 CSS</button>
+          </div>
+          <div class="code-wrap">
+            <pre id="cssOutput"></pre>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace('#', '').trim();
+      const normalized = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+      if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
+      const intVal = parseInt(normalized, 16);
+      return {
+        r: (intVal >> 16) & 255,
+        g: (intVal >> 8) & 255,
+        b: intVal & 255,
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    }
+
+    function hslToRgb(h, s, l) {
+      h = ((h % 360) + 360) % 360;
+      s /= 100; l /= 100;
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c / 2;
+      let r1 = 0, g1 = 0, b1 = 0;
+      if (h < 60) { r1 = c; g1 = x; }
+      else if (h < 120) { r1 = x; g1 = c; }
+      else if (h < 180) { g1 = c; b1 = x; }
+      else if (h < 240) { g1 = x; b1 = c; }
+      else if (h < 300) { r1 = x; b1 = c; }
+      else { r1 = c; b1 = x; }
+      return { r: (r1 + m) * 255, g: (g1 + m) * 255, b: (b1 + m) * 255 };
+    }
+
+    function hslToHex(h, s, l) {
+      const { r, g, b } = hslToRgb(h, s, l);
+      return rgbToHex(r, g, b);
+    }
+
+    function shiftHue(h, amount) {
+      return ((h + amount) % 360 + 360) % 360;
+    }
+
+    function relativeLuminance(hex) {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return 0;
+      const channels = [rgb.r, rgb.g, rgb.b].map(v => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    }
+
+    function contrastRatio(a, b) {
+      const l1 = relativeLuminance(a);
+      const l2 = relativeLuminance(b);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    function getBestTextColor(bgHex) {
+      const whiteRatio = contrastRatio(bgHex, '#ffffff');
+      const blackRatio = contrastRatio(bgHex, '#111827');
+      return whiteRatio >= blackRatio ? '#ffffff' : '#111827';
+    }
+
+    function getPassLevel(ratio) {
+      if (ratio >= 7) return { label: 'AAA', className: 'pass' };
+      if (ratio >= 4.5) return { label: 'AA', className: 'pass' };
+      if (ratio >= 3) return { label: '僅大字 AA', className: 'warn' };
+      return { label: '未達 AA', className: 'fail' };
+    }
+
+    function generateScale(baseHsl) {
+      const stops = [
+        { name: '50', l: 97, s: Math.max(18, baseHsl.s * 0.35) },
+        { name: '100', l: 92, s: Math.max(22, baseHsl.s * 0.45) },
+        { name: '200', l: 84, s: Math.max(28, baseHsl.s * 0.58) },
+        { name: '300', l: 72, s: Math.max(34, baseHsl.s * 0.74) },
+        { name: '400', l: 60, s: Math.max(42, baseHsl.s * 0.9) },
+        { name: '500', l: baseHsl.l, s: baseHsl.s },
+        { name: '600', l: clamp(baseHsl.l - 8, 18, 90), s: clamp(baseHsl.s + 4, 10, 95) },
+        { name: '700', l: clamp(baseHsl.l - 16, 12, 82), s: clamp(baseHsl.s + 6, 10, 95) },
+        { name: '800', l: clamp(baseHsl.l - 24, 8, 75), s: clamp(baseHsl.s + 8, 10, 95) },
+        { name: '900', l: clamp(baseHsl.l - 32, 6, 68), s: clamp(baseHsl.s + 10, 10, 95) },
+      ];
+
+      return stops.map(stop => {
+        const hex = hslToHex(baseHsl.h, clamp(stop.s, 0, 100), clamp(stop.l, 0, 100));
+        const text = getBestTextColor(hex);
+        const ratio = contrastRatio(hex, text);
+        return { ...stop, hex, text, ratio };
+      });
+    }
+
+    function generateRelated(baseHsl) {
+      const items = [
+        { label: '主色', hex: hslToHex(baseHsl.h, baseHsl.s, baseHsl.l), usage: '主按鈕 / 主視覺' },
+        { label: '鄰近色 A', hex: hslToHex(shiftHue(baseHsl.h, -24), clamp(baseHsl.s * 0.9, 18, 90), clamp(baseHsl.l + 2, 28, 68)), usage: '次主題 / 分區色塊' },
+        { label: '鄰近色 B', hex: hslToHex(shiftHue(baseHsl.h, 24), clamp(baseHsl.s * 0.9, 18, 90), clamp(baseHsl.l + 2, 28, 68)), usage: '次主題 / 補充重點' },
+        { label: '互補色', hex: hslToHex(shiftHue(baseHsl.h, 180), clamp(baseHsl.s * 0.92, 18, 90), clamp(baseHsl.l, 30, 60)), usage: '強烈對比 / CTA' },
+        { label: '強調色', hex: hslToHex(shiftHue(baseHsl.h, 140), clamp(baseHsl.s * 0.95, 20, 92), clamp(baseHsl.l - 2, 26, 58)), usage: '提醒 / Icon / 狀態' },
+        { label: '中性色', hex: hslToHex(baseHsl.h, 12, 48), usage: '次要文字 / 邊框' },
+        { label: '淡背景', hex: hslToHex(baseHsl.h, Math.max(10, baseHsl.s * 0.22), 96), usage: '背景 / 卡片底色' },
+      ];
+
+      return items.map(item => {
+        const text = getBestTextColor(item.hex);
+        const ratio = contrastRatio(item.hex, text);
+        return { ...item, text, ratio };
+      });
+    }
+
+    function buildCssVars(scale, related) {
+      const map = Object.fromEntries(related.map(item => [item.label, item.hex]));
+      return `:root {\n  --primary-50: ${scale[0].hex};\n  --primary-100: ${scale[1].hex};\n  --primary-200: ${scale[2].hex};\n  --primary-300: ${scale[3].hex};\n  --primary-400: ${scale[4].hex};\n  --primary-500: ${scale[5].hex};\n  --primary-600: ${scale[6].hex};\n  --primary-700: ${scale[7].hex};\n  --primary-800: ${scale[8].hex};\n  --primary-900: ${scale[9].hex};\n\n  --color-primary: ${map['主色']};\n  --color-accent: ${map['強調色']};\n  --color-analogous-a: ${map['鄰近色 A']};\n  --color-analogous-b: ${map['鄰近色 B']};\n  --color-complementary: ${map['互補色']};\n  --color-neutral: ${map['中性色']};\n  --color-surface-soft: ${map['淡背景']};\n}`;
+    }
+
+    function renderScale(scale) {
+      const grid = document.getElementById('scaleGrid');
+      grid.innerHTML = scale.map(item => {
+        const level = getPassLevel(item.ratio);
+        return `
+          <article class="swatch">
+            <div class="swatch-preview" style="background:${item.hex}; color:${item.text};">${item.hex.toUpperCase()}</div>
+            <div class="swatch-meta">
+              <div class="swatch-label">Primary ${item.name}</div>
+              <div class="swatch-sub">建議文字色：${item.text.toUpperCase()}<br>對比：${item.ratio.toFixed(2)}:1</div>
+              <span class="pill ${level.className}">${level.label}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderRelated(related) {
+      const grid = document.getElementById('relatedGrid');
+      grid.innerHTML = related.map(item => {
+        const level = getPassLevel(item.ratio);
+        return `
+          <article class="swatch swatch-small">
+            <div class="swatch-preview" style="background:${item.hex}; color:${item.text};">${item.hex.toUpperCase()}</div>
+            <div class="swatch-meta">
+              <div class="swatch-label">${item.label}</div>
+              <div class="swatch-sub">${item.usage}<br>建議文字色：${item.text.toUpperCase()}</div>
+              <span class="pill ${level.className}">${level.label}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function buildContrastChecks(scale, related) {
+      const relMap = Object.fromEntries(related.map(item => [item.label, item.hex]));
+      const checks = [
+        { title: '主色 + 白字', fg: '#ffffff', bg: scale[5].hex, desc: '常見於主按鈕、深色標籤、主色底 CTA。' },
+        { title: '主色 + 黑字', fg: '#111827', bg: scale[5].hex, desc: '若主色偏亮，黑字有時比白字更安全。' },
+        { title: 'Primary 700 + 白字', fg: '#ffffff', bg: scale[7].hex, desc: '偏深主色常是最穩定的可讀按鈕色。' },
+        { title: '淡背景 + 主色字', fg: relMap['主色'], bg: relMap['淡背景'], desc: '適合卡片提示區、柔和區塊標題。' },
+        { title: '淡背景 + 中性色字', fg: relMap['中性色'], bg: relMap['淡背景'], desc: '適合內文或次要資訊。' },
+        { title: '互補色 + 白字', fg: '#ffffff', bg: relMap['互補色'], desc: '用於高對比 CTA 時請特別檢查。' },
+        { title: '強調色 + 白字', fg: '#ffffff', bg: relMap['強調色'], desc: '適合通知、狀態標籤、提醒按鈕。' },
+      ];
+
+      return checks.map(item => {
+        const ratio = contrastRatio(item.fg, item.bg);
+        return { ...item, ratio, level: getPassLevel(ratio) };
+      });
+    }
+
+    function renderContrastList(checks) {
+      const list = document.getElementById('contrastList');
+      list.innerHTML = checks.map(item => `
+        <div class="check-item">
+          <div class="check-info">
+            <div class="check-title">${item.title}</div>
+            <div class="check-desc">${item.desc}</div>
+          </div>
+          <div class="mini-pair">
+            <div class="mini-a" style="background:${item.bg}; color:${item.fg};">Aa</div>
+            <div class="mini-b" style="background:${item.fg}; color:${item.bg};">${item.fg.toUpperCase()}</div>
+          </div>
+          <div class="check-ratio">${item.ratio.toFixed(2)}:1</div>
+          <span class="pill ${item.level.className}">${item.level.label}</span>
+        </div>
+      `).join('');
+    }
+
+    function applyColor(input) {
+      const normalized = input.startsWith('#') ? input : `#${input}`;
+      const rgb = hexToRgb(normalized);
+      if (!rgb) {
+        alert('請輸入正確 HEX 色碼，例如 #0f766e');
+        return;
+      }
+      const cleanHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+      document.getElementById('hexInput').value = cleanHex;
+      document.getElementById('colorPicker').value = cleanHex;
+
+      const baseHsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      const scale = generateScale(baseHsl);
+      const related = generateRelated(baseHsl);
+      const checks = buildContrastChecks(scale, related);
+      const css = buildCssVars(scale, related);
+
+      renderScale(scale);
+      renderRelated(related);
+      renderContrastList(checks);
+      document.getElementById('cssOutput').textContent = css;
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', () => {
+      applyColor(document.getElementById('hexInput').value.trim());
+    });
+
+    document.getElementById('hexInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyColor(e.target.value.trim());
+    });
+
+    document.getElementById('colorPicker').addEventListener('input', (e) => {
+      applyColor(e.target.value);
+    });
+
+    document.getElementById('randomBtn').addEventListener('click', () => {
+      const hex = rgbToHex(
+        Math.floor(Math.random() * 256),
+        Math.floor(Math.random() * 256),
+        Math.floor(Math.random() * 256)
+      );
+      applyColor(hex);
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const content = document.getElementById('cssOutput').textContent;
+      try {
+        await navigator.clipboard.writeText(content);
+        const btn = document.getElementById('copyBtn');
+        const original = btn.textContent;
+        btn.textContent = '已複製';
+        setTimeout(() => btn.textContent = original, 1200);
+      } catch (err) {
+        alert('複製失敗，請手動複製。');
+      }
+    });
+
+    applyColor('#0f766e');
+  </script>
+</body>
+</html>

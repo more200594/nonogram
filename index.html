@@ -1,486 +1,487 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數織終極遊玩助手 (長寬自訂版)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 20px; user-select: none; }
-        
-        .setup-controls { background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border-left: 5px solid #8b5cf6; }
-        .setup-controls label { font-weight: bold; color: #333; }
-        .setup-controls input[type="number"] { width: 60px; padding: 5px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小工具入口</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, .88);
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #dbe4ef;
+      --brand: #2563eb;
+      --shadow: 0 18px 50px rgba(15, 23, 42, .12);
+      --radius: 24px;
+    }
 
-        .controls, .tools { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
-        button { padding: 8px 16px; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; transition: filter 0.2s; font-weight: bold;}
-        button:hover { filter: brightness(0.9); }
-        
-        .tool-radio { display: none; }
-        .tool-label { padding: 8px 16px; background-color: #e2e8f0; border: 2px solid transparent; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold; color: #333; transition: all 0.2s; }
-        .tool-radio:checked + .tool-label { background-color: #dbeafe; border-color: #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.4); }
+    * { box-sizing: border-box; }
 
-        .guess-mode-toggle { padding: 8px 16px; background-color: #f9fafb; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; font-weight: bold; color: #333; transition: all 0.2s; white-space: nowrap; }
-        .guess-mode-toggle.active { background-color: #fffbeb; border-color: #f59e0b; color: #b45309; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(37, 99, 235, .18), transparent 28rem),
+        radial-gradient(circle at 88% 18%, rgba(20, 184, 166, .18), transparent 26rem),
+        linear-gradient(135deg, #f8fbff 0%, var(--bg) 100%);
+      padding: 42px 18px;
+    }
 
-        .game-area { display: flex; flex-direction: column; overflow-x: auto; max-width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .wrap { width: min(1100px, 100%); margin: 0 auto; }
 
-        .formula-bar-container { display: flex; align-items: center; margin-bottom: 15px; padding: 10px 15px; background-color: #e2e8f0; border-radius: 6px; box-sizing: border-box; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-        .formula-bar-container label { font-weight: bold; margin-right: 10px; color: #333; white-space: nowrap; }
-        .formula-bar-container input { flex-grow: 1; padding: 8px 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid rgba(219, 228, 239, .9);
+      border-radius: 32px;
+      padding: clamp(26px, 5vw, 48px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      margin-bottom: 22px;
+    }
 
-        .row-container { display: flex; }
-        
-        .clue-header { cursor: pointer; background-color: transparent; transition: background-color 0.2s, border 0.2s; border: 1px dashed transparent; border-radius: 4px; }
-        .clue-header:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
-        .clue-header.active { background-color: #dbeafe; border: 1px solid #3b82f6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -90px;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(20,184,166,.18));
+    }
 
-        .top-clues-wrapper { display: flex; margin-left: 100px; margin-bottom: 5px; }
-        .top-clue { width: 30px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 5px; min-height: 60px; gap: 2px; }
-        .top-clue span { font-size: 13px; line-height: 1.2; font-weight: bold; color: #333; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #eef6ff;
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: .92rem;
+      margin-bottom: 18px;
+    }
 
-        .left-clues-wrapper { display: flex; flex-direction: column; width: 100px; margin-right: 5px; }
-        .left-clue { height: 30px; display: flex; justify-content: flex-end; align-items: center; padding-right: 8px; gap: 6px; }
-        .left-clue span { font-size: 13px; font-weight: bold; color: #333; }
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.8rem);
+      line-height: 1.05;
+      letter-spacing: .03em;
+    }
 
-        .grid { display: grid; gap: 1px; background-color: #999; border: 2px solid #333; touch-action: none; }
-        .cell { width: 30px; height: 30px; background-color: white; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: crosshair; }
-        
-        .filled { background-color: #333; } 
-        .crossed { color: #d32f2f; background-color: white; } 
-        .guess-filled { background-color: #888888; } 
-        .guess-crossed { color: #f57c00; background-color: white; } 
-        
-        .hide-for-snapshot { display: none !important; }
-    </style>
+    .desc {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1.05rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin: 22px 0 14px;
+    }
+
+    .search-box {
+      flex: 1 1 280px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font: inherit;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .refresh-btn,
+    .filter-btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+      transition: .18s ease;
+    }
+
+    .refresh-btn:hover,
+    .filter-btn:hover { transform: translateY(-2px); }
+
+    .filter-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #14b8a6);
+      border-color: transparent;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 22px;
+    }
+
+    .count {
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      padding: 22px;
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid rgba(219, 228, 239, .95);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 7px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 44px rgba(15, 23, 42, .14);
+      border-color: rgba(37, 99, 235, .35);
+    }
+
+    .icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(20,184,166,.12));
+      font-size: 1.8rem;
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+      letter-spacing: .02em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin: 0 0 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #eef2f7;
+      color: var(--muted);
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    .go { color: var(--brand); }
+
+    .empty {
+      display: none;
+      text-align: center;
+      padding: 36px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: rgba(255,255,255,.72);
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px 12px; }
+      .hero { border-radius: 24px; }
+      .toolbar { align-items: stretch; }
+      .count { width: 100%; text-align: center; }
+      .card { min-height: 190px; }
+      .refresh-btn { width: 100%; }
+      .filter-btn { flex: 1 1 auto; }
+    }
+  </style>
 </head>
 <body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">✨ GitHub Pages 小工具集</div>
+      <h1>我的網頁工具箱</h1>
+      <p class="desc">這裡放一些自己做的小工具與小遊戲。主要工具可手動分類與命名；自動掃描到的新檔會先放進「未分類」，之後再慢慢整理就好。</p>
+    </section>
 
-    <h2>🤖 數織終極遊玩助手</h2>
-    
-    <div class="setup-controls">
-        <label for="grid-width">寬度 (直行):</label>
-        <input type="number" id="grid-width" value="10" min="1" max="50">
-        
-        <label for="grid-height">高度 (橫列):</label>
-        <input type="number" id="grid-height" value="10" min="1" max="50">
-        
-        <button onclick="applyNewSize()" style="background-color: #8b5cf6;">✨ 建立新畫布</button>
-    </div>
+    <section class="toolbar" aria-label="工具搜尋區">
+      <label class="search-box">
+        🔎
+        <input id="searchInput" type="search" placeholder="搜尋工具名稱、說明或分類，例如：遊戲、工廠、數織" autocomplete="off" />
+      </label>
+      <button class="refresh-btn" id="refreshBtn" type="button">🔄 一鍵更新</button>
+      <div class="count" id="countText">共 0 個工具</div>
+    </section>
 
-    <div class="tools">
-        <input type="radio" name="tool" id="tool-fill" value="1" class="tool-radio" checked>
-        <label for="tool-fill" class="tool-label">⬛ 塗黑</label>
+    <section class="filters" id="filterBar" aria-label="分類篩選"></section>
 
-        <input type="radio" name="tool" id="tool-cross" value="-1" class="tool-radio">
-        <label for="tool-cross" class="tool-label">❌ 打叉</label>
+    <section class="grid" id="appGrid" aria-label="工具入口清單"></section>
+    <section class="empty" id="emptyState">找不到符合的工具，換個關鍵字或分類試試看。</section>
 
-        <input type="radio" name="tool" id="tool-clear" value="0" class="tool-radio">
-        <label for="tool-clear" class="tool-label">🧽 橡皮擦</label>
+    <footer>Made for fun · Hosted on GitHub Pages</footer>
+  </main>
 
-        <button type="button" id="guess-mode-btn" class="guess-mode-toggle" onclick="toggleGuessMode()">🤔 假設模式</button>
-    </div>
+  <script>
+    const owner = "more200594";
+    const repo = "nonogram";
 
-    <div class="controls">
-        <button onclick="checkGameState()" style="background-color: #10b981;">🔍 檢查對錯</button>
-        <button onclick="showAnswer()" style="background-color: #f59e0b;">💡 顯示解答</button>
-        <button onclick="resetGrid()" style="background-color:#6c757d;">🗑️ 清空網格</button>
-        
-        <div style="width: 2px; height: 25px; background: #ccc; margin: 0 5px;"></div>
-        
-        <button onclick="saveGame()" style="background-color: #0ea5e9;">💾 儲存進度</button>
-        <button onclick="loadGame()" style="background-color: #0284c7;">📂 讀取進度</button>
-        <button onclick="takeSnapshot()" style="background-color: #ec4899;">📸 下載圖片</button>
-    </div>
+    const categories = ["全部", "遊戲", "工具", "模擬器", "測試頁", "未分類"];
+    let activeCategory = "全部";
 
-    <div class="game-area" id="capture-area">
-        <div class="formula-bar-container" id="formula-bar">
-            <label id="formula-label">選擇提示區</label>
-            <input type="text" id="formula-input" placeholder="請點選網格邊緣的提示區，可按 Tab 快速切換..." disabled>
-        </div>
+    // 主要工具：這裡可以手動改名稱、說明、分類、圖示與顏色。
+    const apps = [
+      {
+        name: "數織小工具",
+        description: "自訂長寬、協助標記與整理數織題目的小工具。",
+        url: "chatnono.html",
+        icon: "🧩",
+        type: "Puzzle",
+        category: "工具",
+        accent: "#7c3aed",
+        accent2: "#a78bfa"
+      },
+      {
+        name: "踩地雷",
+        description: "經典 Minesweeper 小遊戲，支援插旗、計時與不同難度。",
+        url: "minesweeper.html",
+        icon: "💣",
+        type: "Game",
+        category: "遊戲",
+        accent: "#dc2626",
+        accent2: "#f97316"
+      },
+      {
+        name: "貪食蛇",
+        description: "Nokia 手機風格的復古貪食蛇，方向鍵或手機按鍵都能玩。",
+        url: "snake.html",
+        icon: "🐍",
+        type: "Game",
+        category: "遊戲",
+        accent: "#16a34a",
+        accent2: "#84cc16"
+      },
+      {
+        name: "工廠模擬器",
+        description: "用方格、牆壁與傳送帶規劃工廠路線與藍圖配置。",
+        url: "Factory/",
+        icon: "🏭",
+        type: "Simulator",
+        category: "模擬器",
+        accent: "#2563eb",
+        accent2: "#14b8a6"
+      }
+    ];
 
-        <div class="top-clues-wrapper" id="top-clues"></div>
-        <div class="row-container">
-            <div class="left-clues-wrapper" id="left-clues"></div>
-            <div class="grid" id="grid"></div>
-        </div>
-    </div>
+    const appGrid = document.getElementById("appGrid");
+    const searchInput = document.getElementById("searchInput");
+    const countText = document.getElementById("countText");
+    const emptyState = document.getElementById("emptyState");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const filterBar = document.getElementById("filterBar");
 
-    <script>
-        // 將原本的常數改為動態變數
-        let ROWS = 10; // 高度 (橫列)
-        let COLS = 10; // 寬度 (直行)
-        
-        const gridElement = document.getElementById('grid');
-        const topCluesElement = document.getElementById('top-clues');
-        const leftCluesElement = document.getElementById('left-clues');
-        const formulaInput = document.getElementById('formula-input');
-        const formulaLabel = document.getElementById('formula-label');
-        const guessModeBtn = document.getElementById('guess-mode-btn');
-        const formulaBar = document.getElementById('formula-bar');
-        
-        const STATE_EMPTY = 0, STATE_FILLED = 1, STATE_CROSSED = -1, STATE_GUESS_FILLED = 2, STATE_GUESS_CROSSED = -2; 
+    let allApps = [...apps];
 
-        let boardState, topCluesData, leftCluesData;
-        let currentEdit = null; 
-        let currentTool = STATE_FILLED; 
-        let isDrawing = false; 
-        let isGuessMode = false; 
+    function normalizeUrl(url) {
+      return url.replace(/^\.\//, "").replace(/\/$/, "");
+    }
 
-        // 綁定畫筆切換與全域滑鼠放開
-        document.querySelectorAll('.tool-radio').forEach(radio => {
-            radio.addEventListener('change', (e) => { currentTool = parseInt(e.target.value); });
-        });
-        document.addEventListener('mouseup', () => isDrawing = false);
+    function prettyName(filename) {
+      return filename
+        .replace(/\.html$/i, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, char => char.toUpperCase());
+    }
 
-        function toggleGuessMode() {
-            isGuessMode = !isGuessMode;
-            if (isGuessMode) guessModeBtn.classList.add('active');
-            else guessModeBtn.classList.remove('active');
-        }
+    function guessCategory(filename, type) {
+      const lower = filename.toLowerCase();
+      if (lower.includes("snake") || lower.includes("mine") || lower.includes("game")) return "遊戲";
+      if (lower.includes("factory") || lower.includes("simulator")) return "模擬器";
+      if (lower.includes("test") || lower.includes("demo") || lower.includes("temp")) return "測試頁";
+      if (lower.includes("tool") || lower.includes("nonogram") || lower.includes("chatnono")) return "工具";
+      return "未分類";
+    }
 
-        // 初始化資料結構與畫面
-        function initializeGame() {
-            topCluesData = Array(COLS).fill("");
-            leftCluesData = Array(ROWS).fill("");
-            boardState = Array(ROWS).fill(null).map(() => Array(COLS).fill(STATE_EMPTY));
-            
-            // 清空 DOM 元素準備重繪
-            gridElement.innerHTML = '';
-            topCluesElement.innerHTML = '';
-            leftCluesElement.innerHTML = '';
-            
-            // 重置輸入框
-            currentEdit = null;
-            formulaInput.disabled = true;
-            formulaInput.value = '';
-            formulaLabel.textContent = '選擇提示區';
+    function autoIcon(name, type, category) {
+      const lower = name.toLowerCase();
+      if (lower.includes("snake")) return "🐍";
+      if (lower.includes("mine")) return "💣";
+      if (lower.includes("factory")) return "🏭";
+      if (category === "遊戲") return "🎮";
+      if (category === "工具") return "🛠️";
+      if (category === "模擬器") return "🧪";
+      if (category === "測試頁") return "🧫";
+      if (type === "dir") return "📁";
+      return "✨";
+    }
 
-            buildUI();
-        }
+    function renderFilters() {
+      filterBar.innerHTML = categories.map(category => `
+        <button class="filter-btn ${category === activeCategory ? "active" : ""}" type="button" data-category="${category}">${category}</button>
+      `).join("");
+    }
 
-        // 建立 DOM 元素
-        function buildUI() {
-            gridElement.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
-            
-            // 建立上方提示 (對應 COLS 寬度)
-            for(let j=0; j<COLS; j++) {
-                let topDiv = document.createElement('div');
-                topDiv.className = 'top-clue clue-header';
-                topDiv.id = `top-${j}`;
-                topDiv.addEventListener('click', () => setActiveClue('top', j));
-                topCluesElement.appendChild(topDiv);
-            }
+    function renderApps(keyword = "") {
+      const normalizedKeyword = keyword.trim().toLowerCase();
 
-            // 建立左方提示與網格本身 (對應 ROWS 高度)
-            for(let i=0; i<ROWS; i++) {
-                let leftDiv = document.createElement('div');
-                leftDiv.className = 'left-clue clue-header';
-                leftDiv.id = `left-${i}`;
-                leftDiv.addEventListener('click', () => setActiveClue('left', i));
-                leftCluesElement.appendChild(leftDiv);
+      const filteredApps = allApps.filter(app => {
+        const text = `${app.name} ${app.description} ${app.type} ${app.category}`.toLowerCase();
+        const matchKeyword = text.includes(normalizedKeyword);
+        const matchCategory = activeCategory === "全部" || app.category === activeCategory;
+        return matchKeyword && matchCategory;
+      });
 
-                for(let j=0; j<COLS; j++) {
-                    let cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.id = `cell-${i}-${j}`;
-                    
-                    const getTargetState = () => {
-                        if (currentTool === STATE_EMPTY) return STATE_EMPTY;
-                        if (isGuessMode) return currentTool === STATE_FILLED ? STATE_GUESS_FILLED : STATE_GUESS_CROSSED;
-                        return currentTool;
-                    };
+      appGrid.innerHTML = filteredApps.map(app => `
+        <a class="card" href="${app.url}" style="--accent:${app.accent}; --accent-2:${app.accent2};">
+          <div class="icon" aria-hidden="true">${app.icon}</div>
+          <span class="tag">${app.category}</span>
+          <h2>${app.name}</h2>
+          <p>${app.description}</p>
+          <div class="meta">
+            <span>${app.type}</span>
+            <span class="go">開啟 →</span>
+          </div>
+        </a>
+      `).join("");
 
-                    cell.addEventListener('mousedown', (e) => {
-                        if(e.button === 2) { 
-                            currentTool = STATE_CROSSED; document.getElementById('tool-cross').checked = true;
-                        } else if (e.button === 0 && document.getElementById('tool-cross').checked && currentTool !== STATE_CROSSED) {
-                            currentTool = STATE_CROSSED;
-                        }
-                        isDrawing = true;
-                        boardState[i][j] = getTargetState();
-                        updateGridUI();
-                    });
+      countText.textContent = `共 ${filteredApps.length} 個工具`;
+      emptyState.style.display = filteredApps.length ? "none" : "block";
+      renderFilters();
+    }
 
-                    cell.addEventListener('mouseenter', () => {
-                        if (isDrawing) { boardState[i][j] = getTargetState(); updateGridUI(); }
-                    });
+    async function loadAutoApps() {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/`, { cache: "no-store" });
+        const files = await response.json();
+        if (!Array.isArray(files)) return;
 
-                    cell.addEventListener('contextmenu', e => e.preventDefault());
-                    gridElement.appendChild(cell);
-                }
-            }
-            renderClues(); // 確保讀檔或重建時有顯示數字
-        }
+        const manualUrls = new Set(apps.map(app => normalizeUrl(app.url)));
+        const autoApps = files
+          .filter(file => {
+            if (file.name === "index.html") return false;
+            if (file.type === "file" && file.name.toLowerCase().endsWith(".html")) return !manualUrls.has(normalizeUrl(file.name));
+            if (file.type === "dir") return !manualUrls.has(normalizeUrl(file.name));
+            return false;
+          })
+          .map(file => {
+            const isDir = file.type === "dir";
+            const url = isDir ? `${file.name}/` : file.name;
+            const category = guessCategory(file.name, file.type);
+            const name = prettyName(file.name);
+            return {
+              name,
+              description: category === "未分類"
+                ? "自動偵測到的新入口，尚未手動分類。"
+                : "自動偵測並初步分類的入口。",
+              url,
+              icon: autoIcon(file.name, file.type, category),
+              type: isDir ? "Folder" : "Auto",
+              category,
+              accent: category === "遊戲" ? "#dc2626" : category === "工具" ? "#7c3aed" : category === "模擬器" ? "#2563eb" : category === "測試頁" ? "#f59e0b" : "#64748b",
+              accent2: category === "遊戲" ? "#f97316" : category === "工具" ? "#a78bfa" : category === "模擬器" ? "#14b8a6" : category === "測試頁" ? "#fbbf24" : "#94a3b8"
+            };
+          });
 
-        // 套用新尺寸 (使用者點擊建立新畫布)
-        function applyNewSize() {
-            let newW = parseInt(document.getElementById('grid-width').value);
-            let newH = parseInt(document.getElementById('grid-height').value);
-            
-            if (isNaN(newW) || isNaN(newH) || newW < 1 || newH < 1) {
-                return alert("寬高必須是有效的正整數喔！");
-            }
-            if (newW > 35 || newH > 35) {
-                if(!confirm("網格設定很大，雖然程式跑得動，但畫面可能會變得非常小或是需要一直捲動，確定要繼續嗎？")) return;
-            }
+        allApps = [...apps, ...autoApps];
+        renderApps(searchInput.value);
+      } catch (error) {
+        console.warn("GitHub 自動掃描失敗：", error);
+      }
+    }
 
-            if(confirm("建立新畫布會清空目前所有進度與題目，確定嗎？")) {
-                COLS = newW;
-                ROWS = newH;
-                initializeGame();
-            }
-        }
+    filterBar.addEventListener("click", event => {
+      const button = event.target.closest("button[data-category]");
+      if (!button) return;
+      activeCategory = button.dataset.category;
+      renderApps(searchInput.value);
+    });
 
-        // 資料編輯列同步邏輯
-        formulaInput.addEventListener('input', (e) => {
-            if (!currentEdit) return;
-            let val = e.target.value;
-            if (currentEdit.type === 'top') topCluesData[currentEdit.index] = val;
-            else leftCluesData[currentEdit.index] = val;
-            renderClues();
-        });
+    searchInput.addEventListener("input", event => renderApps(event.target.value));
 
-        // 動態支援長寬不一的 Tab 切換
-        formulaInput.addEventListener('keydown', (e) => {
-            if (!currentEdit) return;
-            if (e.key === 'Tab' || e.key === 'Enter') {
-                e.preventDefault(); 
-                let nextType = currentEdit.type;
-                let nextIndex = currentEdit.index;
-                
-                if (e.shiftKey && e.key === 'Tab') { 
-                    if (currentEdit.type === 'left') { 
-                        nextIndex--; 
-                        if (nextIndex < 0) { nextType = 'top'; nextIndex = COLS - 1; } 
-                    } else { 
-                        nextIndex--; 
-                        if (nextIndex < 0) { nextType = 'left'; nextIndex = ROWS - 1; } 
-                    }
-                } else { 
-                    if (currentEdit.type === 'top') { 
-                        nextIndex++; 
-                        if (nextIndex >= COLS) { nextType = 'left'; nextIndex = 0; } 
-                    } else { 
-                        nextIndex++; 
-                        if (nextIndex >= ROWS) { nextType = 'top'; nextIndex = 0; } 
-                    }
-                }
-                setActiveClue(nextType, nextIndex);
-            }
-        });
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.textContent = "🔄 更新中...";
+      allApps = [...apps];
+      renderApps(searchInput.value);
+      await loadAutoApps();
+      refreshBtn.textContent = "🔄 一鍵更新";
+    });
 
-        function setActiveClue(type, index) {
-            document.querySelectorAll('.clue-header').forEach(el => el.classList.remove('active'));
-            currentEdit = { type, index };
-            document.getElementById(`${type}-${index}`).classList.add('active');
-            formulaInput.disabled = false;
-            formulaLabel.textContent = (type === 'top' ? `第 ${index + 1} 直行 :` : `第 ${index + 1} 橫列 :`);
-            formulaInput.value = type === 'top' ? topCluesData[index] : leftCluesData[index];
-            formulaInput.focus();
-            setTimeout(() => formulaInput.select(), 0);
-        }
-
-        function renderClues() {
-            for(let j=0; j<COLS; j++) {
-                let topVals = topCluesData[j].split(',').filter(v => v.trim() !== '');
-                document.getElementById(`top-${j}`).innerHTML = topVals.map(v => `<span>${v}</span>`).join('');
-            }
-            for(let i=0; i<ROWS; i++) {
-                let leftVals = leftCluesData[i].split(',').filter(v => v.trim() !== '');
-                document.getElementById(`left-${i}`).innerHTML = leftVals.map(v => `<span>${v}</span>`).join('');
-            }
-        }
-
-        function resetGrid() {
-            if(confirm("確定要清空網格上的所有畫筆嗎？（提示數字不會被清除）")){
-                boardState = Array(ROWS).fill(null).map(() => Array(COLS).fill(STATE_EMPTY));
-                updateGridUI();
-            }
-        }
-
-        function getParsedClues(type) {
-            let dataArr = type === 'top' ? topCluesData : leftCluesData;
-            return dataArr.map(val => val ? val.split(',').filter(v => v.trim() !== '').map(Number) : []);
-        }
-
-        function updateGridUI() {
-            for (let i = 0; i < ROWS; i++) {
-                for (let j = 0; j < COLS; j++) {
-                    let cell = document.getElementById(`cell-${i}-${j}`);
-                    cell.className = 'cell';
-                    cell.innerHTML = '';
-                    switch (boardState[i][j]) {
-                        case STATE_FILLED: cell.classList.add('filled'); break;
-                        case STATE_CROSSED: cell.classList.add('crossed'); cell.innerHTML = 'X'; break;
-                        case STATE_GUESS_FILLED: cell.classList.add('guess-filled'); break;
-                        case STATE_GUESS_CROSSED: cell.classList.add('guess-crossed'); cell.innerHTML = 'X'; break;
-                    }
-                }
-            }
-        }
-
-        // --- 存檔讀檔 (加入動態長寬支援) ---
-        function saveGame() {
-            const saveData = { rows: ROWS, cols: COLS, board: boardState, topClues: topCluesData, leftClues: leftCluesData };
-            localStorage.setItem('nonogram_save', JSON.stringify(saveData));
-            alert('💾 進度已經安全儲存！');
-        }
-
-        function loadGame() {
-            const savedData = localStorage.getItem('nonogram_save');
-            if (!savedData) return alert('找不到之前的存檔記錄喔！');
-            try {
-                const data = JSON.parse(savedData);
-                // 讀檔時自動更新長寬並重繪介面
-                ROWS = data.rows;
-                COLS = data.cols;
-                document.getElementById('grid-height').value = ROWS;
-                document.getElementById('grid-width').value = COLS;
-                
-                boardState = data.board;
-                topCluesData = data.topClues;
-                leftCluesData = data.leftClues;
-                
-                buildUI();
-                updateGridUI();
-                alert('📂 讀取成功！歡迎回來繼續挑戰。');
-            } catch (e) {
-                alert('讀檔失敗，存檔資料可能已經損毀。');
-            }
-        }
-
-        // 截圖下載
-        function takeSnapshot() {
-            const captureArea = document.getElementById('capture-area');
-            formulaBar.classList.add('hide-for-snapshot');
-            document.querySelectorAll('.clue-header').forEach(el => el.classList.remove('active'));
-            currentEdit = null; formulaInput.disabled = true; formulaInput.value = ''; formulaLabel.textContent = '選擇提示區';
-
-            html2canvas(captureArea, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
-                let link = document.createElement('a');
-                link.download = `數織完成圖_${new Date().getTime()}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-                formulaBar.classList.remove('hide-for-snapshot');
-            }).catch(err => {
-                alert("截圖發生錯誤！");
-                formulaBar.classList.remove('hide-for-snapshot');
-            });
-        }
-
-        // --- 核心演算法 (支援長寬不同) ---
-        function getPermutations(length, clues) {
-            if (clues.length === 0) return [Array(length).fill(STATE_CROSSED)];
-            let perms = [];
-            let firstClue = clues[0];
-            let restClues = clues.slice(1);
-            let minSpaceForRest = restClues.reduce((a, b) => a + b + 1, 0);
-            let maxStart = length - firstClue - (restClues.length > 0 ? minSpaceForRest : 0);
-            for (let i = 0; i <= maxStart; i++) {
-                let p = Array(length).fill(STATE_CROSSED);
-                for (let j = 0; j < firstClue; j++) p[i + j] = STATE_FILLED; 
-                if (restClues.length === 0) perms.push(p);
-                else {
-                    p[i + firstClue] = STATE_CROSSED; 
-                    let subPerms = getPermutations(length - i - firstClue - 1, restClues);
-                    for (let sub of subPerms) {
-                        let combined = [...p];
-                        for(let k=0; k<sub.length; k++) combined[i + firstClue + 1 + k] = sub[k];
-                        perms.push(combined);
-                    }
-                }
-            }
-            return perms;
-        }
-
-        function getBlocksFromLine(line) {
-            let blocks = []; let count = 0;
-            for (let i=0; i<line.length; i++) {
-                if (line[i] === STATE_FILLED || line[i] === STATE_GUESS_FILLED) count++;
-                else if (count > 0) { blocks.push(count); count = 0; }
-            }
-            if (count > 0) blocks.push(count);
-            return blocks;
-        }
-
-        function checkGameState() {
-            let topClues = getParsedClues('top');
-            let leftClues = getParsedClues('left');
-            let isPerfect = true;
-            
-            // 檢查橫列
-            for(let i=0; i<ROWS; i++) if (getBlocksFromLine(boardState[i]).join(',') !== leftClues[i].join(',')) { isPerfect = false; break; }
-            // 檢查直行
-            if (isPerfect) for(let j=0; j<COLS; j++) { let colState = boardState.map(row => row[j]); if (getBlocksFromLine(colState).join(',') !== topClues[j].join(',')) { isPerfect = false; break; } }
-            if (isPerfect) { alert("🎉 太神啦！網格完全符合提示，你通關了！"); return; }
-
-            let hasError = false;
-            for (let i = 0; i < ROWS; i++) {
-                let perms = getPermutations(COLS, leftClues[i]); // 橫列的排列長度是 COLS
-                let validPerms = perms.filter(p => p.every((val, idx) => {
-                    let curState = boardState[i][idx];
-                    if (curState === STATE_EMPTY) return true;
-                    return ((curState === STATE_FILLED || curState === STATE_GUESS_FILLED) ? STATE_FILLED : STATE_CROSSED) === val;
-                }));
-                if (validPerms.length === 0) { hasError = true; break; }
-            }
-            if (!hasError) {
-                for (let j = 0; j < COLS; j++) {
-                    let perms = getPermutations(ROWS, topClues[j]); // 直行的排列長度是 ROWS
-                    let colState = boardState.map(row => row[j]);
-                    let validPerms = perms.filter(p => p.every((val, idx) => {
-                        let curState = colState[idx];
-                        if (curState === STATE_EMPTY) return true;
-                        return ((curState === STATE_FILLED || curState === STATE_GUESS_FILLED) ? STATE_FILLED : STATE_CROSSED) === val;
-                    }));
-                    if (validPerms.length === 0) { hasError = true; break; }
-                }
-            }
-            if (hasError) alert("❌ 哎呀！有些地方產生矛盾了，你可能有填錯喔！");
-            else alert("✅ 目前為止的邏輯都是對的，沒有衝突！繼續保持！");
-        }
-
-        function showAnswer() {
-            if (!confirm("💡 確定要偷看答案嗎？這會覆蓋掉你目前的進度喔！")) return;
-            for (let i = 0; i < ROWS; i++) for (let j = 0; j < COLS; j++) boardState[i][j] = STATE_EMPTY;
-            let topClues = getParsedClues('top'); let leftClues = getParsedClues('left');
-            let changed = true; let iterations = 0;
-            
-            while (changed && iterations < 20) {
-                changed = false; iterations++;
-                for (let i = 0; i < ROWS; i++) {
-                    let perms = getPermutations(COLS, leftClues[i]);
-                    let validPerms = perms.filter(p => p.every((val, idx) => boardState[i][idx] === STATE_EMPTY || boardState[i][idx] === val));
-                    if(validPerms.length > 0) {
-                        for (let j = 0; j < COLS; j++) {
-                            if (boardState[i][j] === STATE_EMPTY) {
-                                if (validPerms.every(p => p[j] === STATE_FILLED)) { boardState[i][j] = STATE_FILLED; changed = true; }
-                                else if (validPerms.every(p => p[j] === STATE_CROSSED)) { boardState[i][j] = STATE_CROSSED; changed = true; }
-                            }
-                        }
-                    }
-                }
-                for (let j = 0; j < COLS; j++) {
-                    let perms = getPermutations(ROWS, topClues[j]);
-                    let colState = boardState.map(row => row[j]);
-                    let validPerms = perms.filter(p => p.every((val, idx) => colState[idx] === STATE_EMPTY || colState[idx] === val));
-                    if(validPerms.length > 0) {
-                        for (let i = 0; i < ROWS; i++) {
-                            if (boardState[i][j] === STATE_EMPTY) {
-                                if (validPerms.every(p => p[i] === STATE_FILLED)) { boardState[i][j] = STATE_FILLED; changed = true; }
-                                else if (validPerms.every(p => p[i] === STATE_CROSSED)) { boardState[i][j] = STATE_CROSSED; changed = true; }
-                            }
-                        }
-                    }
-                }
-            }
-            updateGridUI();
-            if (iterations === 20) alert("這題太難啦！需要用到進階的假設推理。我幫你把能 100% 確定的格子都填上了！");
-        }
-
-        // 啟動遊戲
-        initializeGame();
-    </script>
+    renderFilters();
+    renderApps();
+    loadAutoApps();
+  </script>
 </body>
 </html>
