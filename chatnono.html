@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>數織輔助小工具｜Nonogram Helper</title>
+<title>數織輔助小工具 V6｜Nonogram Helper</title>
 <style>
 :root{
   --brand:#1b7f6b;
@@ -285,16 +285,54 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
   header h1{font-size:24px}
   :root{--cell:26px;--topHint:88px;--leftHint:98px}
 }
+
+.boardWrap, .nonogram, .cell, .rowHint, .colHint, .corner{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  touch-action:none;
+}
+
+
+.boardWrap{
+  height:72vh;
+  max-height:none;
+  overscroll-behavior:contain;
+}
+.cell.lockPreview{
+  outline:3px solid rgba(43,125,191,.45);
+  z-index:3;
+}
+.colHint{
+  box-shadow:0 3px 0 rgba(119,131,128,.18);
+}
+.rowHint{
+  box-shadow:3px 0 0 rgba(119,131,128,.18);
+}
+.corner{
+  box-shadow:3px 3px 0 rgba(119,131,128,.18);
+}
+.lockNote{
+  color:var(--muted);
+  font-size:13px;
+  margin-left:6px;
+}
+
 </style>
 </head>
 <body>
 <header>
-  <h1>數織輔助小工具</h1>
+  <h1>數織輔助小工具 V6</h1>
   <p>自訂長寬、無限題目、可拖曳作畫的 Nonogram / Picross 解題助手</p>
 </header>
 
 <main class="wrap">
   <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="color:#145e50">設定面板</strong>
+      <button id="togglePanelBtn" class="secondary">收合 ▲</button>
+    </div>
+    <div id="panelContent">
     <div class="controls">
       <div class="field">
         <label for="rows">高度／列數</label>
@@ -323,6 +361,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
       <div class="field full">
         <div class="tabs">
           <button class="tab active" data-tab="input">輸入題目提示</button>
+          <button class="tab" data-tab="paste">整題貼上</button>
           <button class="tab" data-tab="save">儲存／載入</button>
           <button class="tab" data-tab="help">使用說明</button>
         </div>
@@ -359,6 +398,48 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
           </div>
         </div>
 
+        <div id="tab-paste" class="hidden">
+          <div class="controls">
+            <div class="field full">
+              <label for="pasteBox">從記事本整題貼上</label>
+              <textarea id="pasteBox" style="min-height:220px" placeholder="推薦格式：
+15x15
+ROWS:
+3
+1 1
+5
+0
+COLS:
+2
+1 1
+4
+0
+
+也支援：
+15 15
+ROWS
+3
+1 1
+...
+COLS
+2
+1 1
+..."></textarea>
+              <div class="help">
+                格式重點：第一行請放長寬，例如 15x15 或 15 15；接著用 ROWS/列/左側 表示左側提示，用 COLS/欄/上方 表示上方提示。每一列/欄一行，沒有提示請填 0。
+              </div>
+            </div>
+            <div class="field full">
+              <div class="btns">
+                <button class="blue" id="parsePasteBtn">一鍵替換目前題目</button>
+                <button class="secondary" id="makeTemplateBtn">產生目前尺寸範本</button>
+                <button class="secondary" id="clearPasteBtn">清空貼上區</button>
+              </div>
+              <div class="status" id="pasteStatus"></div>
+            </div>
+          </div>
+        </div>
+
         <div id="tab-save" class="hidden">
           <div class="controls">
             <div class="field wide">
@@ -388,21 +469,27 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
         <div id="tab-help" class="hidden">
           <div class="help" style="font-size:15px;line-height:1.8">
             <b>格子操作：</b>左鍵點擊會依序切換「塗黑 → 打叉 → 問號 → 空白」。<br>
-            <b>拖曳作畫：</b>先選下方工具模式，再按住滑鼠拖過格子即可連續畫。手機也可用觸控拖曳。<br>
+            <b>拖曳作畫：</b>先選下方工具模式，再按住滑鼠拖過格子即可連續畫；拖曳時會自動判斷橫向或直向並鎖定，避免畫歪。手機也可用觸控拖曳。<br>
             <b>檢查功能：</b>目前會檢查每列/每欄的連續黑格數是否已符合提示；符合會變綠，不符合但黑格數超過或分段不可能時會變紅。<br>
             <b>注意：</b>這是「輔助解題工具」，不是完全自動解答器；可以幫你避免畫錯、保存題目、快速重玩。
           </div>
         </div>
       </div>
     </div>
-  </section>
+  </div></section>
 
   <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="color:#145e50">設定面板</strong>
+      <button id="togglePanelBtn" class="secondary">收合 ▲</button>
+    </div>
+    <div id="panelContent">
     <div class="modeBar">
+      <div class="lockNote">拖曳時會自動鎖定橫列或直欄，避免畫歪。</div>
       <div class="modeGroup">
         <button class="toolMode" data-mode="cycle">點擊循環</button>
         <button class="toolMode" data-mode="black">塗黑</button>
-        <button class="toolMode" data-mode="empty" class="toolMode active">打叉</button>
+        <button class="toolMode" class="toolMode active" data-mode="empty">打叉</button>
         <button class="toolMode" data-mode="maybe">問號</button>
         <button class="toolMode" data-mode="clear">橡皮擦</button>
       </div>
@@ -420,7 +507,7 @@ button:disabled{opacity:.45;cursor:not-allowed;transform:none}
 <script>
 const $ = id => document.getElementById(id);
 let rows=15, cols=15, grid=[], rowClues=[], colClues=[], mode='empty';
-let dragging=false, dragValue=null;
+let dragging=false, dragValue=null, dragStartR=null, dragStartC=null, dragAxis=null, lastPaintKey='';
 
 function parseClues(text, expected){
   const lines = text.replace(/\r/g,'').split('\n');
@@ -494,10 +581,11 @@ function render(){
       applyCellClass(cell, grid[r][c]);
       cell.addEventListener('pointerdown', onPointerDown);
       cell.addEventListener('pointerenter', onPointerEnter);
+      cell.addEventListener('pointermove', onPointerMove);
       board.appendChild(cell);
     }
   }
-  document.addEventListener('pointerup',()=>{dragging=false;dragValue=null;});
+  document.addEventListener('pointerup',()=>{dragging=false;dragValue=null;dragAxis=null;lastPaintKey='';clearLockPreview();});
   checkState(false);
 }
 function applyCellClass(el,val){
@@ -516,21 +604,65 @@ function valueByMode(current){
   return current;
 }
 function paintCell(el,val=null){
+  if(!el) return;
   const r=+el.dataset.r, c=+el.dataset.c;
+  const key = r + ',' + c;
+  if(dragging && key === lastPaintKey) return;
+  lastPaintKey = key;
   const newVal = val===null ? valueByMode(grid[r][c]) : val;
   grid[r][c]=newVal;
   applyCellClass(el,newVal);
 }
+function getCell(r,c){
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+function clearLockPreview(){
+  document.querySelectorAll('.cell.lockPreview').forEach(el=>el.classList.remove('lockPreview'));
+}
+function paintLockedPath(targetR,targetC){
+  let r = targetR, c = targetC;
+  if(dragAxis==='row') r = dragStartR;
+  if(dragAxis==='col') c = dragStartC;
+  const el = getCell(r,c);
+  if(el){
+    clearLockPreview();
+    el.classList.add('lockPreview');
+    paintCell(el, dragValue);
+  }
+}
 function onPointerDown(e){
   e.preventDefault();
   dragging=true;
-  const r=+this.dataset.r, c=+this.dataset.c;
-  dragValue=valueByMode(grid[r][c]);
+  dragAxis=null;
+  lastPaintKey='';
+  dragStartR=+this.dataset.r;
+  dragStartC=+this.dataset.c;
+  dragValue=valueByMode(grid[dragStartR][dragStartC]);
+  if(this.setPointerCapture){
+    try{ this.setPointerCapture(e.pointerId); }catch(err){}
+  }
   paintCell(this, dragValue);
 }
 function onPointerEnter(e){
   if(!dragging || dragValue===null) return;
-  paintCell(this, dragValue);
+  const r=+this.dataset.r, c=+this.dataset.c;
+  if(dragAxis===null){
+    const dr=Math.abs(r-dragStartR);
+    const dc=Math.abs(c-dragStartC);
+    if(dr===0 && dc===0){
+      paintCell(this, dragValue);
+      return;
+    }
+    dragAxis = dc >= dr ? 'row' : 'col';
+  }
+  paintLockedPath(r,c);
+}
+function onPointerMove(e){
+  if(!dragging || dragValue===null) return;
+  const hit = document.elementFromPoint(e.clientX, e.clientY);
+  const cell = hit && hit.closest ? hit.closest('.cell') : null;
+  if(!cell) return;
+  onPointerEnter.call(cell, e);
 }
 function getRuns(arr){
   const runs=[]; let n=0;
@@ -653,13 +785,105 @@ function setSample(){
   $('rows').value=10; $('cols').value=10; $('title').value='範例：小愛心';
   $('rowClues').value=['2 2','4 4','10','10','8','6','4','2','1 1','0'].join('\n');
   $('colClues').value=['0','2','4','6','8','8','6','4','2','0'].join('\n');
-  buildBoard();
+  
+// 收合面板
+const toggleBtn = document.getElementById('togglePanelBtn');
+const panelContent = document.getElementById('panelContent');
+let collapsed = false;
+toggleBtn.addEventListener('click', ()=>{
+  collapsed = !collapsed;
+  panelContent.style.display = collapsed ? 'none' : 'block';
+  toggleBtn.textContent = collapsed ? '展開 ▼' : '收合 ▲';
+});
+
+buildBoard();
 }
+
+function normalizeHeader(s){
+  return s.trim().toUpperCase().replace(/[：:]/g,'');
+}
+function isRowHeader(s){
+  const x=normalizeHeader(s);
+  return ['ROWS','ROW','R','LEFT','左側','列','橫列','列提示','左側列提示'].includes(x);
+}
+function isColHeader(s){
+  const x=normalizeHeader(s);
+  return ['COLS','COL','C','COLUMNS','COLUMN','TOP','上方','欄','直欄','欄提示','上方欄提示'].includes(x);
+}
+function parsePuzzleText(raw){
+  const lines = raw.replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(x=>x && !x.startsWith('#'));
+  if(!lines.length) throw new Error('貼上內容是空的。');
+
+  let sizeLineIndex = lines.findIndex(line => /(\d+)\s*(?:x|X|×|\*|\s)\s*(\d+)/.test(line));
+  if(sizeLineIndex < 0) throw new Error('找不到長寬，請在最前面放 15x15 或 15 15。');
+
+  const m = lines[sizeLineIndex].match(/(\d+)\s*(?:x|X|×|\*|\s)\s*(\d+)/);
+  const r = Math.max(1, Math.min(80, parseInt(m[1],10)));
+  const c = Math.max(1, Math.min(80, parseInt(m[2],10)));
+
+  let section = '';
+  const rowLines = [];
+  const colLines = [];
+
+  for(let i=sizeLineIndex+1;i<lines.length;i++){
+    const line = lines[i];
+    if(isRowHeader(line)){ section='rows'; continue; }
+    if(isColHeader(line)){ section='cols'; continue; }
+    if(/^[-=]{3,}$/.test(line)) continue;
+
+    if(section==='rows') rowLines.push(line);
+    else if(section==='cols') colLines.push(line);
+  }
+
+  if(!rowLines.length || !colLines.length){
+    const rest = lines.slice(sizeLineIndex+1).filter(line=>!isRowHeader(line)&&!isColHeader(line)&&!/^[-=]{3,}$/.test(line));
+    if(rest.length >= r+c){
+      return {rows:r, cols:c, rowText:rest.slice(0,r).join('\n'), colText:rest.slice(r,r+c).join('\n')};
+    }
+    throw new Error('找不到 ROWS / COLS 區塊，或提示行數不足。');
+  }
+
+  if(rowLines.length !== r) throw new Error(`左側列提示有 ${rowLines.length} 行，但高度是 ${r}。`);
+  if(colLines.length !== c) throw new Error(`上方欄提示有 ${colLines.length} 行，但寬度是 ${c}。`);
+
+  return {rows:r, cols:c, rowText:rowLines.join('\n'), colText:colLines.join('\n')};
+}
+function applyPastedPuzzle(){
+  try{
+    const data = parsePuzzleText($('pasteBox').value);
+    $('rows').value = data.rows;
+    $('cols').value = data.cols;
+    $('rowClues').value = data.rowText;
+    $('colClues').value = data.colText;
+    
+// 收合面板
+const toggleBtn = document.getElementById('togglePanelBtn');
+const panelContent = document.getElementById('panelContent');
+let collapsed = false;
+toggleBtn.addEventListener('click', ()=>{
+  collapsed = !collapsed;
+  panelContent.style.display = collapsed ? 'none' : 'block';
+  toggleBtn.textContent = collapsed ? '展開 ▼' : '收合 ▲';
+});
+
+buildBoard();
+    $('pasteStatus').innerHTML = `<span class="badge ok">已套用：${data.rows} × ${data.cols}</span><span class="badge ok">已清空作答並生成新棋盤</span>`;
+  }catch(err){
+    $('pasteStatus').innerHTML = `<span class="badge danger">${err.message}</span>`;
+  }
+}
+function makePasteTemplate(){
+  const r = Math.max(1, Math.min(80, +$('rows').value||15));
+  const c = Math.max(1, Math.min(80, +$('cols').value||15));
+  $('pasteBox').value = `${r}x${c}\nROWS:\n${Array.from({length:r},()=> '0').join('\n')}\nCOLS:\n${Array.from({length:c},()=> '0').join('\n')}`;
+  $('pasteStatus').innerHTML = `<span class="badge ok">已產生 ${r} × ${c} 貼上範本</span>`;
+}
+
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    ['input','save','help'].forEach(t=>$('tab-'+t).classList.add('hidden'));
+    ['input','paste','save','help'].forEach(t=>$('tab-'+t).classList.add('hidden'));
     $('tab-'+btn.dataset.tab).classList.remove('hidden');
   });
 });
@@ -671,6 +895,9 @@ document.querySelectorAll('.toolMode').forEach(btn=>{
   });
 });
 $('buildBtn').addEventListener('click',buildBoard);
+$('parsePasteBtn').addEventListener('click',applyPastedPuzzle);
+$('makeTemplateBtn').addEventListener('click',makePasteTemplate);
+$('clearPasteBtn').addEventListener('click',()=>{$('pasteBox').value='';$('pasteStatus').innerHTML='';});
 $('applyCluesBtn').addEventListener('click',()=>{rowClues=parseClues($('rowClues').value, rows); colClues=parseClues($('colClues').value, cols); fitHintArea(); render();});
 $('fitHintBtn').addEventListener('click',fitHintArea);
 $('copyBlankBtn').addEventListener('click',generateBlankFormat);
@@ -695,6 +922,30 @@ $('importTextBtn').addEventListener('click',()=>{
   catch(e){alert('JSON 內容讀取失敗，請確認格式。');}
 });
 $('cellSize').addEventListener('change',()=>{setCSS(); render();});
+
+// 防止棋盤操作時跳出瀏覽器選單／觸控長按選單
+document.addEventListener('contextmenu', function(e){
+  if(e.target.closest && e.target.closest('#boardWrap')){
+    e.preventDefault();
+  }
+});
+document.addEventListener('dragstart', function(e){
+  if(e.target.closest && e.target.closest('#boardWrap')){
+    e.preventDefault();
+  }
+});
+
+
+// 收合面板
+const toggleBtn = document.getElementById('togglePanelBtn');
+const panelContent = document.getElementById('panelContent');
+let collapsed = false;
+toggleBtn.addEventListener('click', ()=>{
+  collapsed = !collapsed;
+  panelContent.style.display = collapsed ? 'none' : 'block';
+  toggleBtn.textContent = collapsed ? '展開 ▼' : '收合 ▲';
+});
+
 buildBoard();
 </script>
 </body>
